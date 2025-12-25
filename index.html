@@ -14,7 +14,7 @@
             --dark: #1B1B19;
             --blue: #0071C0;
             --green: #28a745;
-            --glass: rgba(255, 255, 255, 0.85);
+            --glass: rgba(255, 255, 255, 0.9);
             --shadow: 0 8px 32px rgba(0,0,0,0.12);
             --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
@@ -73,7 +73,6 @@
         }
         .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(97,33,15,0.4); }
         .btn:active { transform: scale(0.98); }
-        .btn-blue { background: linear-gradient(45deg, var(--blue), #005a9e); }
         .track-item { 
             background: var(--glass); 
             backdrop-filter: blur(10px); 
@@ -111,13 +110,13 @@
         .close-btn { background: none; border: none; color: white; font-size: 28px; cursor: pointer; }
         .overlay-body { padding: 25px; }
         .address-box { background: rgba(0,0,0,0.05); padding: 20px; border-radius: 15px; font-family: monospace; white-space: pre-wrap; word-break: break-all; font-size: 15px; position: relative; }
-        .copy-icon { position: absolute; top: 10px; right: 10px; background: rgba(0,113,192,0.8); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .copy-icon:hover { background: var(--blue); }
+        .copy-icon { position: absolute; top: 10px; right: 10px; background: rgba(0,113,192,0.8); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 18px; }
+        .copy-icon:hover { background: var(--blue); transform: scale(1.1); }
         #adminPanel { display: none; background: var(--gradient); min-height: 100vh; padding-top: 80px; color: white; }
         .admin-card { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 20px; padding: 25px; margin: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.2); }
         .admin-card h3 { color: #00ffea; text-shadow: 0 0 10px rgba(0,255,234,0.5); }
         .file-item { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .delete-file-btn { background: #dc3545; padding: 8px 15px; border-radius: 10px; }
+        .delete-file-btn { background: #dc3545; padding: 8px 15px; border-radius: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -180,7 +179,7 @@
     <div class="card text-center p-5">
         <i class="fas fa-telegram fa-5x" style="color: var(--blue); margin-bottom: 20px;"></i>
         <h3>Admin bilan tez aloqa</h3>
-        <button class="btn btn-blue" onclick="openAdminChat()">Telegramda yozish</button>
+        <button class="btn" style="background: var(--blue);" onclick="openAdminChat()">Telegramda yozish</button>
     </div>
 </div>
 
@@ -204,7 +203,7 @@
         </div>
         <div class="overlay-body">
             <div class="address-box" id="addressContent"></div>
-            <div class="copy-icon" onclick="copyAddress()" title="Nusxalash">
+            <div class="copy-icon" onclick="copyAddress()">
                 <i class="fas fa-copy"></i>
             </div>
         </div>
@@ -220,11 +219,11 @@
         <div class="overlay-body">
             <div class="card mb-3">
                 <h4>Toshkent asosiy ofis</h4>
-                <p>Toshkent shahri, Chilanzar tumani</p>
+                <p>Toshkent shahri</p>
             </div>
             <div class="card">
                 <h4>Namangan filiali</h4>
-                <p>Namangan viloyati, Sardoba</p>
+                <p>Namangan viloyati</p>
             </div>
         </div>
     </div>
@@ -276,7 +275,7 @@
     </div>
 </div>
 
-<!-- Admin Panel (hidden) -->
+<!-- Admin Panel -->
 <div id="adminPanel">
     <div class="header">ADMIN PANEL</div>
     <div class="container mt-4">
@@ -289,16 +288,6 @@
         <div class="admin-card">
             <h3>Yuklangan fayllar</h3>
             <div id="fileList"></div>
-        </div>
-
-        <div class="admin-card">
-            <h3>Mijoz xabarlari</h3>
-            <div id="adminMessages"></div>
-        </div>
-
-        <div class="admin-card">
-            <h3>Mijozlar va treklar</h3>
-            <div id="clientList"></div>
         </div>
 
         <div class="admin-card">
