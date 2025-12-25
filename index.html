@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>JEK KARGO</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -66,7 +65,7 @@
     <!-- Chatlar Page -->
     <div class="page" id="chatlarPage">
         <div class="card">
-            <h3>Admin bilan bog'lanish</h3>
+            <h3>Takliflar yoki etirozlar</h3>
             <div class="input-group">
                 <label>Xabar</label>
                 <textarea id="messageText" rows="5" placeholder="Xabaringizni yozing..."></textarea>
@@ -78,9 +77,9 @@
             <i class="fas fa-telegram" style="font-size: 64px; color: var(--accent-blue); margin-bottom: 20px;"></i>
             <h3>Admin bilan to'g'ridan-to'g'ri muloqot</h3>
             <p style="margin: 15px 0;">Savollaringiz bormi? Admin bilan Telegramda gaplashing!</p>
-            <a href="https://t.me/jekkargo" target="_blank" class="btn btn-secondary">
+            <button class="btn btn-secondary" onclick="openAdminChat()">
                 <i class="fas fa-paper-plane"></i> Admin bilan chat
-            </a>
+            </button>
         </div>
     </div>
 
@@ -110,7 +109,7 @@
         </div>
     </div>
 
-    <!-- Calculator Page (overlay) -->
+    <!-- Calculator Overlay (as 'new page' via overlay for mobile flow) -->
     <div class="overlay" id="calculatorOverlay">
         <div class="overlay-content">
             <div class="overlay-header">
