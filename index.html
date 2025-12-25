@@ -13,46 +13,71 @@
             --dark: #1B1B19;
             --blue: #0071C0;
         }
-        body { background: var(--secondary); color: var(--dark); font-family: 'Segoe UI', sans-serif; padding-bottom: 80px; }
+        body { background: var(--secondary); color: var(--dark); font-family: 'Segoe UI', sans-serif; padding-bottom: 80px; margin: 0; }
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 20px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .page { display: none; padding: 20px; }
+        .page { display: none; padding: 20px; min-height: calc(100vh - 140px); }
         .page.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .big-button { background: white; border: 2px solid var(--primary); border-radius: 16px; padding: 25px; margin-bottom: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: 0.3s; cursor: pointer; }
-        .big-button:hover { transform: translateY(-5px); }
+        .big-button { background: white; border: 2px solid var(--primary); border-radius: 16px; padding: 25px; margin-bottom: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: 0.3s; cursor: pointer; user-select: none; }
+        .big-button:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .big-button:active { transform: scale(0.98); }
         .big-button i { font-size: 40px; color: var(--blue); margin-bottom: 15px; display: block; }
         .big-button .title { font-size: 18px; font-weight: bold; color: var(--primary); }
         .big-button .subtitle { font-size: 14px; color: #666; }
         .card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .input-group input, .input-group textarea { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 12px; font-size: 16px; }
-        .btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; }
+        .btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        .btn:active { transform: scale(0.98); }
         .track-item { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--blue); }
-        .delete-btn { background: #dc3545; color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 16px; }
+        .delete-btn { background: #dc3545; color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 16px; cursor: pointer; }
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); z-index: 1000; }
-        .nav-item { flex: 1; text-align: center; padding: 12px; color: #888; }
+        .nav-item { flex: 1; text-align: center; padding: 12px; color: #888; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
         .nav-item i { font-size: 24px; display: block; margin-bottom: 4px; }
-        #adminPanel { display: none; }
-        .admin-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        #adminPanel { display: none; background: var(--secondary); min-height: 100vh; padding-top: 70px; }
+        .admin-card { background: white; border-radius: 16px; padding: 20px; margin: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
 <div class="header" id="pageTitle">JEK KARGO</div>
 
-<!-- Client Pages -->
+<!-- Asosiy -->
 <div class="page active" id="asosiyPage">
-    <div class="big-button" onclick="showAddress('avia')"><i class="fas fa-plane"></i><div class="title">Xitoy manzili (AVIA)</div></div>
-    <div class="big-button" onclick="showAddress('avto')"><i class="fas fa-truck"></i><div class="title">Xitoy manzili (AVTO)</div></div>
-    <div class="big-button" onclick="showTopshirish()"><i class="fas fa-map-marker-alt"></i><div class="title">Topshirish punktlari</div></div>
-    <div class="big-button" onclick="showPochtaBepul()"><i class="fas fa-gift"></i><div class="title">Pochta bepul</div></div>
-    <div class="big-button" onclick="showCalculator()"><i class="fas fa-calculator"></i><div class="title">Kalkulyator</div></div>
+    <div class="big-button" onclick="showAddress('avia')">
+        <i class="fas fa-plane"></i>
+        <div class="title">Xitoy manzili (AVIA)</div>
+        <div class="subtitle">Avia yuklar uchun</div>
+    </div>
+    <div class="big-button" onclick="showAddress('avto')">
+        <i class="fas fa-truck"></i>
+        <div class="title">Xitoy manzili (AVTO)</div>
+        <div class="subtitle">Avto yuklar uchun</div>
+    </div>
+    <div class="big-button" onclick="showTopshirish()">
+        <i class="fas fa-map-marker-alt"></i>
+        <div class="title">Topshirish punktlari</div>
+        <div class="subtitle">O'zbekistondagi manzillar</div>
+    </div>
+    <div class="big-button" onclick="showPochtaBepul()">
+        <i class="fas fa-gift"></i>
+        <div class="title">Pochta bepul</div>
+        <div class="subtitle">1 kg+ yuklarga</div>
+    </div>
+    <div class="big-button" onclick="showCalculator()">
+        <i class="fas fa-calculator"></i>
+        <div class="title">Kalkulyator</div>
+        <div class="subtitle">Narxni hisoblash</div>
+    </div>
 </div>
 
+<!-- Buyurtmalar -->
 <div class="page" id="buyurtmalarPage">
     <div class="card">
         <h3>Trek raqam qo'shish</h3>
-        <div class="input-group"><input type="text" id="trackInput" placeholder="Vergul bilan ajrating"></div>
+        <div class="input-group">
+            <input type="text" id="trackInput" placeholder="Vergul bilan: ABC123, DEF456">
+        </div>
         <button class="btn" onclick="addTrackNumbers()">Qo'shish</button>
     </div>
     <div class="card">
@@ -61,43 +86,47 @@
     </div>
 </div>
 
+<!-- Chatlar -->
 <div class="page" id="chatlarPage">
     <div class="card">
         <h3>Taklif yoki etiroz</h3>
-        <div class="input-group"><textarea id="messageText" rows="5" placeholder="Xabaringizni yozing..."></textarea></div>
+        <div class="input-group">
+            <textarea id="messageText" rows="5" placeholder="Xabaringizni yozing..."></textarea>
+        </div>
         <button class="btn" onclick="sendMessage()">Yuborish</button>
     </div>
     <div class="card text-center p-5">
-        <i class="fas fa-telegram fa-4x" style="color:var(--blue);"></i>
+        <i class="fas fa-telegram fa-4x" style="color: var(--blue);"></i>
         <h3>Admin bilan chat</h3>
-        <button class="btn" style="background:var(--blue);" onclick="openAdminChat()">Telegramda yozish</button>
+        <button class="btn" style="background: var(--blue);" onclick="openAdminChat()">Telegramda yozish</button>
     </div>
 </div>
 
+<!-- Profil -->
 <div class="page" id="profilPage">
     <div class="card text-center">
-        <i class="fas fa-user-circle fa-5x" style="color:var(--blue); margin-bottom:20px;"></i>
+        <i class="fas fa-user-circle fa-5x" style="color: var(--blue); margin-bottom: 20px;"></i>
         <div class="p-4">
             <div class="text-start border-bottom py-2"><strong>ID Kod:</strong> <span id="profileId" class="float-end">-</span></div>
             <div class="text-start border-bottom py-2"><strong>Ro'yxatdan o'tgan:</strong> <span id="profileDate" class="float-end">-</span></div>
             <div class="text-start py-2"><strong>Jami treklar:</strong> <span id="profileOrders" class="float-end">0</span></div>
         </div>
-        <button class="btn" style="background:#dc3545;margin-top:20px;" onclick="logout()">Chiqish</button>
+        <button class="btn" style="background:#dc3545; margin-top: 20px;" onclick="logout()">Chiqish</button>
     </div>
 </div>
 
 <!-- Admin Panel (hidden) -->
 <div id="adminPanel">
     <div class="header">ADMIN PANEL</div>
-    <div class="container mt-4">
+    <div class="container">
         <div class="admin-card">
             <h3>Yangi Excel yuklash</h3>
             <input type="file" id="excelUpload" accept=".xlsx" class="form-control mb-3">
-            <button class="btn" onclick="uploadExcel()">Yuklash (barcha fayllarga qo'shiladi)</button>
+            <button class="btn" onclick="uploadExcel()">Yuklash</button>
         </div>
 
         <div class="admin-card">
-            <h3>Yuklangan fayllar (${excelFiles.length})</h3>
+            <h3>Yuklangan fayllar</h3>
             <div id="fileList"></div>
         </div>
 
@@ -107,26 +136,24 @@
         </div>
 
         <div class="admin-card">
-            <h3>Barcha mijozlar va trek raqamlari</h3>
+            <h3>Mijozlar va treklar</h3>
             <div id="clientList"></div>
         </div>
 
         <div class="admin-card">
             <h3>Narx sozlamalari</h3>
-            <div class="row g-3">
-                <div class="col-12"><label>Dollar kursi</label><input type="number" class="form-control" id="dollarRate"></div>
-                <div class="col-6"><label>Avia narxi ($/kg)</label><input type="number" step="0.1" class="form-control" id="aviaPrice"></div>
-                <div class="col-6"><label>Avto narxi ($/kg)</label><input type="number" step="0.1" class="form-control" id="avtoPrice"></div>
-            </div>
+            <div class="input-group"><label>Dollar kursi</label><input type="number" id="dollarRate" class="form-control"></div>
+            <div class="input-group"><label>Avia narxi ($/kg)</label><input type="number" step="0.1" id="aviaPrice" class="form-control"></div>
+            <div class="input-group"><label>Avto narxi ($/kg)</label><input type="number" step="0.1" id="avtoPrice" class="form-control"></div>
             <button class="btn mt-3" onclick="savePrices()">Saqlash</button>
         </div>
 
         <div class="admin-card">
-            <h3>Faoliyat jurnali</h3>
-            <div id="adminLogs" style="max-height:300px;overflow-y:auto;"></div>
+            <h3>Log</h3>
+            <div id="adminLogs" style="max-height:300px; overflow-y:auto;"></div>
         </div>
 
-        <div class="text-center mb-5">
+        <div class="text-center">
             <button class="btn" style="background:#dc3545;" onclick="logout()">Chiqish</button>
         </div>
     </div>
