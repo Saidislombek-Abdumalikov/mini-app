@@ -98,17 +98,19 @@ function checkLogin() {
 
 // Login prompt with validation
 // Login prompt - completely hidden admin access
+// Login prompt - completely hidden admin access + no cancel allowed
 function promptLogin() {
     let input;
-    do {
+    while (true) {
         input = prompt('ID kodingizni kiriting (3 yoki 4 raqamli son):').trim();
 
-        if (!input) {
-            alert('ID kiritish majburiy!');
-            continue;
+        // If user clicks Cancel (input === null) or leaves empty
+        if (input === null || input === '') {
+            alert('ID kiritish majburiy! Iltimos, ID kiriting.');
+            continue; // Ask again
         }
 
-        // Secret admin access - NO HINT AT ALL
+        // Secret admin access (only you know)
         if (input === 's08121719') {
             currentUser.id = 'ADMIN';
             currentUser.isAdmin = true;
@@ -131,8 +133,9 @@ function promptLogin() {
             return;
         } else {
             alert('ID faqat 3 yoki 4 ta raqamdan iborat bo\'lishi kerak!\nMasalan: 123 yoki 4445');
+            // Loop continues - asks again
         }
-    } while (true);
+    }
 }
 
 // Update profile info
@@ -452,5 +455,6 @@ function loadAdminLogsDisplay() {
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('overlay')) closeOverlay();
 });
+
 
 
