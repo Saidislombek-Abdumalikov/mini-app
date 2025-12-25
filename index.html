@@ -15,16 +15,17 @@
             --blue: #0071C0;
             --green: #28a745;
             --glass: rgba(255, 255, 255, 0.85);
-            --shadow: 0 8px 32px rgba(0,0,0,0.1);
+            --shadow: 0 8px 32px rgba(0,0,0,0.12);
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
-        body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var(--dark); font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 80px; min-height: 100vh; }
+        body { background: var(--secondary); color: var(--dark); font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 80px; min-height: 100vh; }
         .header { background: linear-gradient(45deg, var(--primary), #8b4513); color: white; padding: 18px; text-align: center; font-weight: bold; font-size: 22px; position: sticky; top: 0; z-index: 1000; box-shadow: var(--shadow); }
-        .page { display: none; padding: 20px; animation: fadeIn 0.5s; }
-        .page.active { display: block; }
+        .page { display: none; padding: 20px; }
+        .page.active { display: block; animation: fadeIn 0.5s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .big-button { 
             background: var(--glass); 
-            backdrop-filter: blur(10px); 
+            backdrop-filter: blur(12px); 
             border: 1px solid rgba(255,255,255,0.3); 
             border-radius: 20px; 
             padding: 30px; 
@@ -34,7 +35,7 @@
             transition: all 0.3s ease; 
             cursor: pointer; 
         }
-        .big-button:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(0,0,0,0.2); }
+        .big-button:hover { transform: translateY(-10px); box-shadow: 0 15px 40px rgba(0,0,0,0.2); }
         .big-button:active { transform: scale(0.98); }
         .big-button i { font-size: 48px; margin-bottom: 15px; display: block; }
         .big-button i.fas.fa-plane { color: var(--blue); }
@@ -43,7 +44,7 @@
         .big-button .subtitle { font-size: 15px; color: #666; margin-top: 8px; }
         .card { 
             background: var(--glass); 
-            backdrop-filter: blur(10px); 
+            backdrop-filter: blur(12px); 
             border-radius: 20px; 
             padding: 25px; 
             margin-bottom: 20px; 
@@ -72,6 +73,7 @@
         }
         .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(97,33,15,0.4); }
         .btn:active { transform: scale(0.98); }
+        .btn-blue { background: linear-gradient(45deg, var(--blue), #005a9e); }
         .track-item { 
             background: var(--glass); 
             backdrop-filter: blur(10px); 
@@ -86,7 +88,7 @@
         .track-item.avto { border-left-color: var(--green); }
         .track-item:hover { transform: translateX(5px); }
         .track-code { font-size: 20px; font-weight: bold; color: var(--primary); margin-bottom: 10px; }
-        .track-info { font-size: 15px; line-height: 1.6; }
+        .track-info { font-size: 15px; line-height: 1.8; }
         .delete-btn { 
             background: #dc3545; 
             color: white; 
@@ -98,7 +100,7 @@
             cursor: pointer; 
             box-shadow: 0 4px 10px rgba(220,53,69,0.3); 
         }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--glass); backdrop-filter: blur(10px); display: flex; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); z-index: 1000; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--glass); backdrop-filter: blur(12px); display: flex; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); z-index: 1000; }
         .nav-item { flex: 1; text-align: center; padding: 15px; color: #888; cursor: pointer; transition: 0.3s; }
         .nav-item.active { color: var(--primary); transform: scale(1.1); }
         .nav-item i { font-size: 26px; display: block; margin-bottom: 5px; }
@@ -108,10 +110,14 @@
         .overlay-header { background: linear-gradient(45deg, var(--primary), #8b4513); color: white; padding: 20px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; }
         .close-btn { background: none; border: none; color: white; font-size: 28px; cursor: pointer; }
         .overlay-body { padding: 25px; }
-        .address-box { background: rgba(0,0,0,0.05); padding: 20px; border-radius: 15px; font-family: monospace; white-space: pre-wrap; word-break: break-all; font-size: 15px; }
-        #adminPanel { display: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding-top: 80px; color: white; }
+        .address-box { background: rgba(0,0,0,0.05); padding: 20px; border-radius: 15px; font-family: monospace; white-space: pre-wrap; word-break: break-all; font-size: 15px; position: relative; }
+        .copy-icon { position: absolute; top: 10px; right: 10px; background: rgba(0,113,192,0.8); color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .copy-icon:hover { background: var(--blue); }
+        #adminPanel { display: none; background: var(--gradient); min-height: 100vh; padding-top: 80px; color: white; }
         .admin-card { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 20px; padding: 25px; margin: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.2); }
         .admin-card h3 { color: #00ffea; text-shadow: 0 0 10px rgba(0,255,234,0.5); }
+        .file-item { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .delete-file-btn { background: #dc3545; padding: 8px 15px; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -142,7 +148,7 @@
     </div>
     <div class="big-button" onclick="openOverlay('calculatorOverlay')">
         <i class="fas fa-calculator"></i>
-        <div class="title">Narx kalkulyatori</div>
+        <div class="title">Kalkulyator</div>
         <div class="subtitle">Tez hisoblash</div>
     </div>
 </div>
@@ -174,7 +180,7 @@
     <div class="card text-center p-5">
         <i class="fas fa-telegram fa-5x" style="color: var(--blue); margin-bottom: 20px;"></i>
         <h3>Admin bilan tez aloqa</h3>
-        <button class="btn" style="background: var(--blue);" onclick="openAdminChat()">Telegramda yozish</button>
+        <button class="btn btn-blue" onclick="openAdminChat()">Telegramda yozish</button>
     </div>
 </div>
 
@@ -198,7 +204,9 @@
         </div>
         <div class="overlay-body">
             <div class="address-box" id="addressContent"></div>
-            <button class="btn" style="background: var(--blue); margin-top: 20px;" onclick="copyAddress()">Nusxalash</button>
+            <div class="copy-icon" onclick="copyAddress()" title="Nusxalash">
+                <i class="fas fa-copy"></i>
+            </div>
         </div>
     </div>
 </div>
@@ -246,13 +254,21 @@
             <div class="input-group mb-3">
                 <label>Xizmat turi</label>
                 <select id="calcService" class="form-control">
-                    <option value="avia">Avia (3-5 kun)</option>
-                    <option value="avto">Avto (14-18 kun)</option>
+                    <option value="avia">Avia kargo (3-5 kun) ✈️</option>
+                    <option value="avto">Avto kargo (14-18 kun) 🚚</option>
                 </select>
+            </div>
+            <div class="input-group mb-3">
+                <label>Donalar soni</label>
+                <input type="number" id="calcItems" value="1" min="1" class="form-control">
             </div>
             <div class="input-group mb-3">
                 <label>Og'irlik (kg)</label>
                 <input type="number" id="calcWeight" step="0.1" min="0.1" class="form-control">
+            </div>
+            <div class="input-group mb-3">
+                <label>O'lchamlar (sm: UxExB)</label>
+                <input type="text" id="calcDimensions" placeholder="50x30x20" class="form-control">
             </div>
             <button class="btn" onclick="calculatePrice()">Hisoblash</button>
             <div id="calcResult" class="mt-4"></div>
@@ -283,6 +299,14 @@
         <div class="admin-card">
             <h3>Mijozlar va treklar</h3>
             <div id="clientList"></div>
+        </div>
+
+        <div class="admin-card">
+            <h3>Narx sozlamalari</h3>
+            <div class="input-group mb-3"><label>Dollar kursi</label><input type="number" id="dollarRate" class="form-control"></div>
+            <div class="input-group mb-3"><label>Avia narxi ($/kg)</label><input type="number" step="0.1" id="aviaPrice" class="form-control"></div>
+            <div class="input-group mb-3"><label>Avto narxi ($/kg)</label><input type="number" step="0.1" id="avtoPrice" class="form-control"></div>
+            <button class="btn mt-3" onclick="savePrices()">Saqlash</button>
         </div>
 
         <div class="text-center mt-5">
