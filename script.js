@@ -26,8 +26,12 @@ function checkLogin() {
     const savedUser = localStorage.getItem('jekCurrentUser');
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
-        updateProfile();
-        loadTrackingNumbers();
+        if (currentUser.isAdmin) {
+            showAdminPanel();
+        } else {
+            updateProfile();
+            loadTrackingNumbers();
+        }
     } else {
         promptLogin();
     }
@@ -534,4 +538,5 @@ document.addEventListener('click', function(e) {
         closeOverlay();
     }
 });
+
 
