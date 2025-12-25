@@ -19,6 +19,7 @@
         .page.active { display: block; }
         .big-button { background: white; border: 2px solid var(--primary); border-radius: 16px; padding: 25px; margin-bottom: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: 0.3s; cursor: pointer; }
         .big-button:hover { transform: translateY(-5px); }
+        .big-button:active { transform: scale(0.98); }
         .big-button i { font-size: 40px; color: var(--blue); margin-bottom: 15px; display: block; }
         .big-button .title { font-size: 18px; font-weight: bold; color: var(--primary); }
         .big-button .subtitle { font-size: 14px; color: #666; }
@@ -38,7 +39,7 @@
         .overlay-header { background: var(--primary); color: white; padding: 15px; border-radius: 16px 16px 0 0; display: flex; justify-content: space-between; align-items: center; }
         .close-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
         .overlay-body { padding: 20px; }
-        .address-box { background: #f0f0f0; padding: 15px; border-radius: 12px; font-family: monospace; white-space: pre-wrap; }
+        .address-box { background: #f0f0f0; padding: 15px; border-radius: 12px; font-family: monospace; white-space: pre-wrap; word-break: break-all; }
         #adminPanel { display: none; background: var(--secondary); min-height: 100vh; padding-top: 70px; }
         .admin-card { background: white; border-radius: 16px; padding: 20px; margin: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     </style>
@@ -141,14 +142,10 @@
             <button class="close-btn" onclick="closeOverlay()">×</button>
         </div>
         <div class="overlay-body">
-            <div class="location-item p-3">
-                <strong>Toshkent asosiy</strong><br>
-                Toshkent shahar
-            </div>
-            <div class="location-item p-3">
-                <strong>Namangan Sardoba</strong><br>
-                Namangan viloyati
-            </div>
+            <ul>
+                <li><strong>Toshkent asosiy</strong> - Toshkent shahar</li>
+                <li><strong>Namangan Sardoba</strong> - Namangan viloyati</li>
+            </ul>
         </div>
     </div>
 </div>
@@ -177,8 +174,8 @@
             <div class="input-group mb-3">
                 <label>Xizmat turi</label>
                 <select id="calcService" class="form-control">
-                    <option value="avia">Avia (3-5 kun)</option>
-                    <option value="avto">Avto (14-18 kun)</option>
+                    <option value="avia">Avia kargo (3-5 kun) ✈️</option>
+                    <option value="avto">Avto kargo (14-18 kun) 🚚</option>
                 </select>
             </div>
             <div class="input-group mb-3">
@@ -190,7 +187,7 @@
                 <input type="number" id="calcWeight" step="0.1" min="0.1" class="form-control">
             </div>
             <div class="input-group mb-3">
-                <label>O'lchamlar (sm)</label>
+                <label>O'lchamlar (sm: UxExB)</label>
                 <input type="text" id="calcDimensions" placeholder="50x30x20" class="form-control">
             </div>
             <button class="btn" onclick="calculatePrice()">Hisoblash</button>
@@ -229,7 +226,7 @@
             <div class="input-group mb-3"><label>Dollar kursi</label><input type="number" id="dollarRate" class="form-control"></div>
             <div class="input-group mb-3"><label>Avia narxi ($/kg)</label><input type="number" step="0.1" id="aviaPrice" class="form-control"></div>
             <div class="input-group mb-3"><label>Avto narxi ($/kg)</label><input type="number" step="0.1" id="avtoPrice" class="form-control"></div>
-            <button class="btn" onclick="savePrices()">Saqlash</button>
+            <button class="btn mt-3" onclick="savePrices()">Saqlash</button>
         </div>
 
         <div class="text-center">
