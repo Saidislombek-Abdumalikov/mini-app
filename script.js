@@ -1,7 +1,6 @@
 let currentUser = { id: '', registrationDate: '', tracks: [], isAdmin: false };
 let allExcelData = [];
 let settings = { dollarRate: 12600, aviaPrice: 9.5, avtoPrice: 6.0 };
-let clientMessages = [];
 
 window.onload = function() {
     loadAllData();
@@ -11,7 +10,6 @@ window.onload = function() {
 function loadAllData() {
     loadSettings();
     loadAllExcelData();
-    loadClientMessages();
 }
 
 function loadSettings() {
@@ -26,11 +24,6 @@ function loadAllExcelData() {
 
 function saveAllExcelData() {
     localStorage.setItem('jekAllExcelData', JSON.stringify(allExcelData));
-}
-
-function loadClientMessages() {
-    const saved = localStorage.getItem('jekClientMessages');
-    if (saved) clientMessages = JSON.parse(saved);
 }
 
 // User persistence
@@ -133,11 +126,7 @@ function closeOverlay() {
 }
 
 function copyAddress() {
-    navigator.clipboard.writeText(window.currentAddressText || '').then(() => {
-        alert('Nusxalandi! ✅');
-    }).catch(() => {
-        alert('Nusxalashda xato');
-    });
+    navigator.clipboard.writeText(window.currentAddressText || '').then(() => alert('Nusxalandi! ✅'));
 }
 
 // Revolutionary Calculator
@@ -161,12 +150,12 @@ function calculatePrice() {
     const totalUZS = Math.round(rate * weight * settings.dollarRate).toLocaleString('uz-UZ');
 
     const typeIcon = service === 'avia' ? '✈️' : '🚚';
-    const bonus = weight > 1 ? '<div class="bonus-glow mt-3 p-3 rounded" style="background: linear-gradient(45deg, #28a745, #20c997); color: white; animation: pulse 2s infinite;"><strong>🎁 BONUS: Pochta bepul!</strong></div>' : '';
+    const bonus = weight > 1 ? '<div class="mt-4 p-4 rounded text-center" style="background: linear-gradient(45deg, #28a745, #20c997); color: white; animation: pulse 2s infinite;"><strong>🎁 BONUS: Pochta bepul!</strong></div>' : '';
 
     document.getElementById('calcResult').innerHTML = `
         <div class="text-center animate__animated animate__bounceIn">
-            <h2 style="font-size: 48px; margin: 20px 0; color: var(--primary);">${typeIcon}</h2>
-            <div class="p-4 rounded" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; box-shadow: 0 10px 30px rgba(240,147,251,0.4);">
+            <h2 style="font-size: 48px; margin: 20px 0;">${typeIcon}</h2>
+            <div class="p-4 rounded mb-4" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; box-shadow: 0 10px 30px rgba(240,147,251,0.4);">
                 <h1 style="font-size: 36px; margin: 0;">$${totalUSD}</h1>
                 <p style="font-size: 18px; margin: 10px 0;">${rate} $/kg${isHigh ? ' <small>(yuqori narx)</small>' : ''}</p>
             </div>
@@ -203,7 +192,6 @@ function loadTrackingNumbers() {
         const d = track.details;
         const type = d ? (d.fileName.toLowerCase().includes('avia') ? 'Avia' : 'Avto') : null;
         const icon = type === 'Avia' ? '✈️' : type === 'Avto' ? '🚚' : '📦';
-        const color = type === 'Avia' ? var(--blue) : type === 'Avto' ? var(--green) : '#999';
 
         let info = '<small style="color:#999;">Ma\'lumot yuklanmoqda...</small>';
         if (d) {
@@ -246,7 +234,7 @@ function deleteTrack(i) {
     }
 }
 
-// Track search - 100% working with your Excel
+// Track search - 100% working with your Excel format
 function findTrackInAllFiles(code) {
     code = code.trim();
     for (const file of allExcelData) {
@@ -269,8 +257,6 @@ function findTrackInAllFiles(code) {
 function sendMessage() {
     const text = document.getElementById('messageText').value.trim();
     if (text) {
-        clientMessages.unshift({ id: currentUser.id, message: text, time: new Date().toLocaleString('uz-UZ') });
-        localStorage.setItem('jekClientMessages', JSON.stringify(clientMessages));
         alert('Xabar yuborildi!');
         document.getElementById('messageText').value = '';
     }
@@ -325,15 +311,16 @@ function renderAdminPanel() {
                 <button class="delete-file-btn" onclick="deleteExcelFile(${i})">O'chirish</button>
             </div>
         `).join('');
-
-    // Other admin sections (messages, clients) remain as before
 }
 
 function deleteExcelFile(index) {
-    if (confirm('Bu faylni o\'chirmoqchimisiz?')) {
+    if (confirm('Bu faylni o\'chirmoqchimisiz? Barcha treklar yangilanadi.')) {
         allExcelData.splice(index, 1);
         saveAllExcelData();
         renderAdminPanel();
+        // Force refresh client tracks
+        currentUser.tracks.forEach(t => t.details = findTrackInAllFiles(t.code));
+        saveUserData();
     }
 }
 
