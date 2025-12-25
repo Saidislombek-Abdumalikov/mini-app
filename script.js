@@ -32,24 +32,92 @@ function checkLogin() {
         promptLogin();
     }
 }
+function showAdminPanel() {
+    // Hide all normal pages
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+    });
+
+    // Update header
+    document.getElementById('pageTitle').textContent = 'ADMIN PANEL';
+
+    // Create admin panel HTML
+    document.getElementById('asosiyPage').innerHTML = `
+        <div class="card">
+            <h3>Excel faylni yangilash</h3>
+            <p style="margin-bottom:15px; color:#666;">Yangi trek ma'lumotlarini yuklang (xlsx formatida)</p>
+            <input type="file" id="excelUpload" accept=".xlsx" style="margin-bottom:10px;">
+            <button class="btn" onclick="uploadExcel()">Yuklash va yangilash</button>
+        </div>
+
+        <div class="card">
+            <h3>Narxlar va kurs</h3>
+            <div class="input-group">
+                <label>Dollar kursi (so'm)</label>
+                <input type="number" id="adminDollar" value="${settings.dollarRate}">
+            </div>
+            <div class="input-group">
+                <label>Avia narxi ($/kg)</label>
+                <input type="number" step="0.1" id="adminAvia" value="${settings.aviaPrice}">
+            </div>
+            <div class="input-group">
+                <label>Avto narxi ($/kg)</label>
+                <input type="number" step="0.1" id="adminAvto" value="${settings.avtoPrice}">
+            </div>
+            <button class="btn" onclick="saveSettings()">Saqlash</button>
+        </div>
+
+        <div class="card">
+            <h3>Mijoz xabarlari</h3>
+            <div id="adminMessages"></div>
+            <button class="btn btn-secondary" onclick="loadAdminMessages()">Yangilash</button>
+        </div>
+
+        <div class="card">
+            <button class="btn" style="background:#dc3545;" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Admin dan chiqish
+            </button>
+        </div>
+    `;
+
+    document.getElementById('asosiyPage').classList.add('active');
+    loadAdminMessages();
+
+    // Hide bottom navigation for admin
+    document.querySelector('.bottom-nav').style.display = 'none';
+}
 
 // Prompt for ID (no phone)
+// Prompt for ID with admin check
 function promptLogin() {
-    const id = prompt('ID kodingizni kiriting:');
-    if (id && id.trim()) {
-        currentUser.id = id.trim().toUpperCase();
-        currentUser.registrationDate = new Date().toLocaleDateString('uz-UZ');
-        currentUser.trackingNumbers = [];
-        saveUserData();
-        updateProfile();
-    } else {
-        // Generate random ID if canceled
+    const input = prompt('ID kodingizni kiriting:\n(Admin uchun: ADMIN123)').trim();
+    
+    if (!input) {
+        // If canceled or empty, generate random client ID
         currentUser.id = 'JEK' + Math.random().toString(36).substring(2, 8).toUpperCase();
         currentUser.registrationDate = new Date().toLocaleDateString('uz-UZ');
         currentUser.trackingNumbers = [];
         saveUserData();
         updateProfile();
+        return;
     }
+
+    if (input.toUpperCase() === 'ADMIN123') {
+        // Enter Admin Mode
+        currentUser.id = 'ADMIN';
+        currentUser.isAdmin = true;
+        saveUserData();
+        showAdminPanel();
+        return;
+    }
+
+    // Normal client login
+    currentUser.id = input.toUpperCase();
+    currentUser.registrationDate = new Date().toLocaleDateString('uz-UZ');
+    currentUser.trackingNumbers = [];
+    currentUser.isAdmin = false;
+    saveUserData();
+    updateProfile();
 }
 
 // Save user data
@@ -409,6 +477,55 @@ function openAdminChat() {
     } else {
         window.open('https://t.me/jekkargo', '_blank');
     }
+}function uploadExcel() {
+    const fileInput = document.getElementById('excelUpload');
+    if (!fileInput.files[0]) {
+        alert('Iltimos, Excel fayl tanlang!');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet);
+
+            // Expected columns: trackingCode, type, flight, weight, receiptDate, pricePerKg
+            excelData = json;
+            localStorage.setItem('jekExcelData', JSON.stringify(excelData));
+            alert('Excel muvaffaqiyatli yuklandi! Barcha mijozlar uchun yangilandi.');
+        } catch (err) {
+            alert('Fayl o\'qishda xato: ' + err.message);
+        }
+    };
+    reader.readAsArrayBuffer(fileInput.files[0]);
+}
+
+function saveSettings() {
+    settings.dollarRate = parseFloat(document.getElementById('adminDollar').value) || 12200;
+    settings.aviaPrice = parseFloat(document.getElementById('adminAvia').value) || 9.5;
+    settings.avtoPrice = parseFloat(document.getElementById('adminAvto').value) || 6;
+    localStorage.setItem('jekSettings', JSON.stringify(settings));
+    alert('Sozlamalar saqlandi!');
+}
+
+function loadAdminMessages() {
+    const messages = JSON.parse(localStorage.getItem('jekClientMessages') || '[]');
+    const container = document.getElementById('adminMessages');
+    if (messages.length === 0) {
+        container.innerHTML = '<p style="color:#999; text-align:center;">Hali xabar yo\'q</p>';
+        return;
+    }
+
+    container.innerHTML = messages.map(msg => `
+        <div style="background:#f0f0f0; padding:12px; border-radius:8px; margin-bottom:10px;">
+            <strong>Mijoz: ${msg.userId}</strong><br>
+            <small>${msg.timestamp}</small>
+            <p style="margin:8px 0 0;">${msg.message}</p>
+        </div>
+    `).join('');
 }
 
 // Close overlays when clicking outside
@@ -417,3 +534,4 @@ document.addEventListener('click', function(e) {
         closeOverlay();
     }
 });
+
