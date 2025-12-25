@@ -17,6 +17,7 @@ body {
     color: var(--dark-color);
     padding-bottom: 70px;
     overflow-x: hidden;
+    font-size: 16px; /* Base for mobile */
 }
 
 .page {
@@ -72,6 +73,9 @@ body {
     cursor: pointer;
     transition: all 0.3s;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    height: auto; /* Flexible for mobile */
+    width: 100%; /* Full width on mobile */
+    max-width: 100%;
 }
 
 .big-button:active {
@@ -467,4 +471,30 @@ body {
 .status-arrived {
     background: #d1e7dd;
     color: #0f5132;
+}
+
+/* Mobile optimizations */
+@media (max-width: 480px) {
+    .big-button {
+        padding: 15px;
+        margin-bottom: 10px;
+    }
+
+    .btn {
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    .header {
+        font-size: 18px;
+        padding: 12px;
+    }
+
+    .nav-item i {
+        font-size: 20px;
+    }
+
+    .nav-item span {
+        font-size: 10px;
+    }
 }
