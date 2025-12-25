@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JEK KARGO</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header" id="pageTitle">JEK KARGO</div>
+
+    <!-- Asosiy Page -->
+    <div class="page active" id="asosiyPage">
+        <div class="big-button" onclick="showAddress('avia')">
+            <i class="fas fa-plane"></i>
+            <div class="title">Xitoy manzilimiz (AVIA)</div>
+            <div class="subtitle">Avia yuklaringiz uchun</div>
+        </div>
+
+        <div class="big-button" onclick="showAddress('avto')">
+            <i class="fas fa-truck"></i>
+            <div class="title">Xitoy manzilimiz (AVTO)</div>
+            <div class="subtitle">Avto yuklaringiz uchun</div>
+        </div>
+
+        <div class="big-button" onclick="showTopshirish()">
+            <i class="fas fa-map-marker-alt"></i>
+            <div class="title">Topshirish punktlari</div>
+            <div class="subtitle">O'zbekistondagi manzillarimiz</div>
+        </div>
+
+        <div class="big-button" onclick="showPochtaBepul()">
+            <i class="fas fa-gift"></i>
+            <div class="title">Pochta bepul</div>
+            <div class="subtitle">1 kg+ yuklarga</div>
+        </div>
+
+        <div class="big-button" onclick="showCalculator()">
+            <i class="fas fa-calculator"></i>
+            <div class="title">Kalkulyator</div>
+            <div class="subtitle">Narxni hisoblash</div>
+        </div>
+    </div>
+
+    <!-- Buyurtmalar Page -->
+    <div class="page" id="buyurtmalarPage">
+        <div class="card">
+            <h3>Trek raqam qo'shish</h3>
+            <div class="input-group">
+                <label>Trek raqam(lar)</label>
+                <input type="text" id="trackInput" placeholder="Vergul bilan ajrating: ABC123, DEF456">
+            </div>
+            <button class="btn" onclick="addTrackNumbers()">Qo'shish</button>
+        </div>
+
+        <div class="card">
+            <h3>Mening buyurtmalarim</h3>
+            <div id="trackList"></div>
+        </div>
+    </div>
+
+    <!-- Chatlar Page -->
+    <div class="page" id="chatlarPage">
+        <div class="card">
+            <h3>Admin bilan bog'lanish</h3>
+            <div class="input-group">
+                <label>Xabar</label>
+                <textarea id="messageText" rows="5" placeholder="Xabaringizni yozing..."></textarea>
+            </div>
+            <button class="btn" onclick="sendMessage()">Yuborish</button>
+        </div>
+
+        <div class="card" style="text-align: center; padding: 40px;">
+            <i class="fas fa-telegram" style="font-size: 64px; color: var(--accent-blue); margin-bottom: 20px;"></i>
+            <h3>Admin bilan to'g'ridan-to'g'ri muloqot</h3>
+            <p style="margin: 15px 0;">Savollaringiz bormi? Admin bilan Telegramda gaplashing!</p>
+            <a href="https://t.me/jekkargo" target="_blank" class="btn btn-secondary">
+                <i class="fas fa-paper-plane"></i> Admin bilan chat
+            </a>
+        </div>
+    </div>
+
+    <!-- Profil Page -->
+    <div class="page" id="profilPage">
+        <div class="card">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <i class="fas fa-user-circle" style="font-size: 80px; color: var(--accent-blue);"></i>
+            </div>
+            <div class="profile-info">
+                <div class="profile-row">
+                    <span class="label">ID Kod:</span>
+                    <span class="value" id="profileId">-</span>
+                </div>
+                <div class="profile-row">
+                    <span class="label">Ro'yxatdan o'tgan:</span>
+                    <span class="value" id="profileDate">-</span>
+                </div>
+                <div class="profile-row">
+                    <span class="label">Jami buyurtmalar:</span>
+                    <span class="value" id="profileOrders">0</span>
+                </div>
+            </div>
+            <button class="btn" style="background: #dc3545; margin-top: 20px;" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Chiqish
+            </button>
+        </div>
+    </div>
+
+    <!-- Calculator Page (overlay) -->
+    <div class="overlay" id="calculatorOverlay">
+        <div class="overlay-content">
+            <div class="overlay-header">
+                <h3>Narx kalkulyatori</h3>
+                <button class="close-btn" onclick="closeOverlay()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="overlay-body">
+                <div class="input-group">
+                    <label>Xizmat turi</label>
+                    <select id="calcService">
+                        <option value="avia">Avia kargo (3-5 kun) ✈️</option>
+                        <option value="avto">Avto kargo (14-18 kun) 🚚</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Donalar soni</label>
+                    <input type="number" id="calcItems" min="1" value="1">
+                </div>
+                <div class="input-group">
+                    <label>Og'irligi (kg)</label>
+                    <input type="number" id="calcWeight" min="0.1" step="0.1" placeholder="Masalan: 5.5">
+                </div>
+                <div class="input-group">
+                    <label>O'lchamlar (sm: UxExB)</label>
+                    <input type="text" id="calcDimensions" placeholder="Masalan: 50x30x20">
+                </div>
+                <button class="btn" onclick="calculatePrice()">Hisoblash</button>
+                <div id="calcResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Address Overlay -->
+    <div class="overlay" id="addressOverlay">
+        <div class="overlay-content">
+            <div class="overlay-header">
+                <h3 id="addressTitle">Xitoy manzili</h3>
+                <button class="close-btn" onclick="closeOverlay()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="overlay-body">
+                <div class="address-box" id="addressContent"></div>
+                <button class="btn btn-secondary" onclick="copyAddress()">
+                    <i class="fas fa-copy"></i> Nusxalash
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Topshirish Overlay -->
+    <div class="overlay" id="topshirishOverlay">
+        <div class="overlay-content">
+            <div class="overlay-header">
+                <h3>Topshirish punktlari</h3>
+                <button class="close-btn" onclick="closeOverlay()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="overlay-body">
+                <div class="location-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                        <strong>Toshkent asosiy</strong>
+                        <p>Toshkent shahar</p>
+                    </div>
+                </div>
+                <div class="location-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <div>
+                        <strong>Namangan Sardoba</strong>
+                        <p>Namangan viloyati</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pochta Bepul Overlay -->
+    <div class="overlay" id="pochtaOverlay">
+        <div class="overlay-content">
+            <div class="overlay-header">
+                <h3>Pochta bepul</h3>
+                <button class="close-btn" onclick="closeOverlay()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="overlay-body" style="text-align: center;">
+                <i class="fas fa-gift" style="font-size: 64px; color: var(--accent-blue); margin-bottom: 20px;"></i>
+                <h2 style="color: var(--primary-color); margin-bottom: 15px;">🎁 Bonus xizmat!</h2>
+                <p style="font-size: 18px; line-height: 1.6;">
+                    Agar yukingiz <strong>1 kg dan ko'p</strong> bo'lsa, EMU EXPRESS ning barcha filliallariga <strong>bepul</strong> yuboramiz!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Track Details Overlay -->
+    <div class="overlay" id="trackDetailsOverlay">
+        <div class="overlay-content">
+            <div class="overlay-header">
+                <h3>Trek ma'lumotlari</h3>
+                <button class="close-btn" onclick="closeOverlay()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="overlay-body">
+                <div id="trackDetails"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="changePage('asosiy')">
+            <i class="fas fa-home"></i>
+            <span>Asosiy</span>
+        </button>
+        <button class="nav-item" onclick="changePage('buyurtmalar')">
+            <i class="fas fa-box"></i>
+            <span>Buyurtmalar</span>
+        </button>
+        <button class="nav-item" onclick="changePage('chatlar')">
+            <i class="fas fa-comments"></i>
+            <span>Chatlar</span>
+        </button>
+        <button class="nav-item" onclick="changePage('profil')">
+            <i class="fas fa-user"></i>
+            <span>Profil</span>
+        </button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
