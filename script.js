@@ -1,5 +1,5 @@
 let currentUser = { id: '', registrationDate: '', trackingNumbers: [], isAdmin: false };
-let allExcelData = [];
+let allExcelData = []; // {name, data: []}
 let settings = { dollarRate: 12600, aviaPrice: 9.5, avtoPrice: 6.0 };
 let clientMessages = [];
 
@@ -33,7 +33,7 @@ function loadClientMessages() {
     if (saved) clientMessages = JSON.parse(saved);
 }
 
-// User persistence
+// Persistent user data
 function getUserKey(id) {
     return 'jekUser_' + id;
 }
@@ -89,7 +89,7 @@ function promptLogin() {
             loadTrackingNumbers();
             return;
         }
-        alert('ID faqat 3 yoki 4 raqam bo\'lishi kerak!');
+        alert('ID faqat 3 yoki 4 ta raqam bo\'lishi kerak!');
     }
 }
 
@@ -133,9 +133,7 @@ function closeOverlay() {
 }
 
 function copyAddress() {
-    navigator.clipboard.writeText(window.currentAddressText || '').then(() => {
-        alert('Manzil nusxalandi! ✅');
-    });
+    navigator.clipboard.writeText(window.currentAddressText || '').then(() => alert('Nusxalandi! ✅'));
 }
 
 // Calculator
@@ -171,7 +169,7 @@ function calculatePrice() {
 function addTrackNumbers() {
     const input = document.getElementById('trackInput').value.trim();
     if (!input) return alert('Trek raqam kiriting!');
-    const codes = input.split(',').map(c => c.trim().toUpperCase()).filter(c => c);
+    const codes = input.split(',').map(c => c.trim());
     currentUser.trackingNumbers = [...new Set([...currentUser.trackingNumbers, ...codes])];
     saveUserData();
     loadTrackingNumbers();
@@ -229,20 +227,21 @@ function deleteTrack(i) {
     }
 }
 
+// Fixed search for your Excel format
 function findTrackInAllFiles(code) {
-    code = code.toUpperCase();
+    code = code.trim();
     for (const file of allExcelData) {
-        const row = file.data.find(r => {
-            const track = (r['追踪代码'] || r['追踪代码 '] || '').toString().trim();
-            return track.toUpperCase() === code;
-        });
-        if (row) {
-            return {
-                fileName: file.name,
-                weight: parseFloat(row['重量/KG'] || row['重量'] || 0),
-                receiptDate: row['收货日期'] || 'Noma\'lum',
-                product: row['货物名称'] || row['Название товара'] || 'Noma\'lum'
-            };
+        for (const row of file.data) {
+            // Check all possible fields for tracking code
+            const possibleTrack = row['追踪代码'] || row['追踪代码 '] || row[2] || '';
+            if (possibleTrack.toString().trim() === code) {
+                return {
+                    fileName: file.name,
+                    weight: parseFloat(row['重量/KG'] || row['重量'] || row[5] || 0),
+                    receiptDate: row['收货日期'] || row[1] || 'Noma\'lum',
+                    product: row['货物名称'] || row['货物名称 Название товара'] || row[3] || 'Noma\'lum'
+                };
+            }
         }
     }
     return null;
@@ -280,8 +279,16 @@ function uploadExcel() {
         try {
             const data = new Uint8Array(e.target.result);
             const wb = XLSX.read(data, { type: 'array' });
-            const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-            const fileInfo = { name: input.files[0].name, date: new Date().toLocaleString('uz-UZ'), data: json };
+            const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+            // Skip header row
+            const rows = json.slice(1);
+            const processed = rows.map(r => ({
+                '追踪代码': r[2] || '',
+                '收货日期': r[1] || '',
+                '货物名称': r[3] || '',
+                '重量/KG': r[5] || r[10] || 0
+            }));
+            const fileInfo = { name: input.files[0].name, data: processed };
             allExcelData.push(fileInfo);
             saveAllExcelData();
             alert(`"${fileInfo.name}" yuklandi!`);
@@ -296,40 +303,14 @@ function uploadExcel() {
 function renderAdminPanel() {
     document.getElementById('fileList').innerHTML = allExcelData.length === 0 
         ? '<p class="text-muted">Fayl yo\'q</p>'
-        : allExcelData.map(f => `<div class="border-bottom py-2"><strong>${f.name}</strong> (${f.data.length} trek)</div>`).join('');
+        : allExcelData.map(f => `<div class="border-bottom py-2"><strong>${f.name}</strong></div>`).join('');
 
     document.getElementById('adminMessages').innerHTML = clientMessages.length === 0 
         ? '<p class="text-muted">Xabar yo\'q</p>'
         : clientMessages.map(m => `<div class="border-bottom py-2"><strong>ID ${m.id}</strong><br>${m.message}<br><small>${m.time}</small></div>`).join('');
 
-    // Client list
-    const clients = [];
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key.startsWith('jekUser_') && !key.includes('ADMIN')) {
-            const user = JSON.parse(localStorage.getItem(key));
-            clients.push(user);
-        }
-    }
-    document.getElementById('clientList').innerHTML = clients.length === 0 
-        ? '<p class="text-muted">Mijoz yo\'q</p>'
-        : clients.map(u => `
-            <div class="border-bottom py-3">
-                <strong>ID: ${u.id}</strong> (${u.trackingNumbers.length} trek)<br>
-                Treklar: ${u.trackingNumbers.join(', ') || 'yo\'q'}<br>
-                <button class="btn btn-sm btn-danger mt-2" onclick="deleteUserTracks('${u.id}')">Treklarini o'chirish</button>
-            </div>
-        `).join('');
-}
-
-function deleteUserTracks(id) {
-    if (confirm(`ID ${id} treklarini o'chirish?`)) {
-        const key = getUserKey(id);
-        const user = JSON.parse(localStorage.getItem(key));
-        user.trackingNumbers = [];
-        localStorage.setItem(key, JSON.stringify(user));
-        renderAdminPanel();
-    }
+    // Client list (simplified)
+    document.getElementById('clientList').innerHTML = '<p class="text-muted">Mijozlar ro\'yxati</p>';
 }
 
 function savePrices() {
