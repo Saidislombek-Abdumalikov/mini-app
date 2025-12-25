@@ -279,20 +279,14 @@ function uploadExcel() {
         try {
             const data = new Uint8Array(e.target.result);
             const wb = XLSX.read(data, { type: 'array' });
-            const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
-            // Skip header row
-            const rows = json.slice(1);
-            const processed = rows.map(r => ({
-                '追踪代码': r[2] || '',
-                '收货日期': r[1] || '',
-                '货物名称': r[3] || '',
-                '重量/KG': r[5] || r[10] || 0
-            }));
-            const fileInfo = { name: input.files[0].name, data: processed };
+            const sheet = wb.Sheets[wb.SheetNames[0]];
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 }); // array of arrays
+            const rows = json.slice(1); // skip header
+            const fileInfo = { name: input.files[0].name, data: rows };
             allExcelData.push(fileInfo);
             saveAllExcelData();
-            alert(`"${fileInfo.name}" yuklandi!`);
-            renderAdminPanel();
+            alert(`"${fileInfo.name}" yuklandi! (${rows.length} ta qator)`);
+            renderAdminPanel(); // if admin
         } catch (err) {
             alert('Xato: ' + err.message);
         }
@@ -300,6 +294,26 @@ function uploadExcel() {
     reader.readAsArrayBuffer(input.files[0]);
 }
 
+function findTrackInAllFiles(code) {
+    code = code.trim();
+    for (const file of allExcelData) {
+        for (const row of file.data) {
+            if (row.length < 3) continue; // skip invalid rows
+            const track = (row[2] || '').toString().trim();
+            if (track === code) {
+                const type = file.name.toLowerCase().includes('avia') ? 'Avia' : 'Avto';
+                return {
+                    fileName: file.name,
+                    type: type,
+                    weight: parseFloat(row[6] || row[9] || 0) || 0,
+                    receiptDate: row[1] || 'Noma\'lum',
+                    product: row[3] || row[4] || 'Noma\'lum'
+                };
+            }
+        }
+    }
+    return null;
+}
 function renderAdminPanel() {
     document.getElementById('fileList').innerHTML = allExcelData.length === 0 
         ? '<p class="text-muted">Fayl yo\'q</p>'
@@ -320,3 +334,4 @@ function savePrices() {
     localStorage.setItem('jekSettings', JSON.stringify(settings));
     alert('Saqlandi!');
 }
+
