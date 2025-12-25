@@ -1,4 +1,4 @@
-let currentUser = { id: '', registrationDate: '', tracks: [], isAdmin: false }; // tracks = array of {code, details}
+let currentUser = { id: '', registrationDate: '', tracks: [], isAdmin: false };
 let allExcelData = [];
 let settings = { dollarRate: 12600, aviaPrice: 9.5, avtoPrice: 6.0 };
 let clientMessages = [];
@@ -121,7 +121,7 @@ function openOverlay(id, type = null) {
         const isAvia = type === 'avia';
         document.getElementById('addressTitle').textContent = isAvia ? 'Xitoy manzili (AVIA)' : 'Xitoy manzili (AVTO)';
         const phone = isAvia ? '18699944426' : '13819957009';
-        const address = `Recipent: JEK${currentUser.id} ${isAvia ? 'AVIA' : ''}\nPhone: ${phone}\nZhejiang Jinhua Yiwu City Heyetang Dongqing Road 89 No. 618 Warehouse (JEK${currentUser.id})`;
+        const address = `收货人: JEK${currentUser.id} ${isAvia ? 'AVIA' : ''}\n手机号码: ${phone}\n浙江省金华市义乌市荷叶塘东青路89号618仓库(JEK${currentUser.id})`;
         document.getElementById('addressContent').textContent = address;
         window.currentAddressText = address;
     }
@@ -133,26 +133,50 @@ function closeOverlay() {
 }
 
 function copyAddress() {
-    navigator.clipboard.writeText(window.currentAddressText || '').then(() => alert('Nusxalandi! ✅'));
+    navigator.clipboard.writeText(window.currentAddressText || '').then(() => {
+        alert('Nusxalandi! ✅');
+    }).catch(() => {
+        alert('Nusxalashda xato');
+    });
 }
 
-// Calculator
+// Revolutionary Calculator
 function calculatePrice() {
     const service = document.getElementById('calcService').value;
+    const items = parseInt(document.getElementById('calcItems').value) || 1;
     const weight = parseFloat(document.getElementById('calcWeight').value);
+    const dims = document.getElementById('calcDimensions').value.trim();
+
     if (!weight || weight <= 0) return alert('Og\'irlikni kiriting!');
-    const rate = service === 'avia' ? settings.aviaPrice : settings.avtoPrice;
-    const totalUZS = Math.round(weight * rate * settings.dollarRate).toLocaleString('uz-UZ');
+
+    let maxDim = 0;
+    if (dims) {
+        const parts = dims.split(/[xX×*]/).map(p => parseFloat(p.trim())).filter(n => !isNaN(n));
+        if (parts.length === 3) maxDim = Math.max(...parts);
+    }
+
+    const isHigh = (items >= 5) || (maxDim > 50);
+    const rate = isHigh ? (service === 'avia' ? 11 : 7.5) : (service === 'avia' ? settings.aviaPrice : settings.avtoPrice);
+    const totalUSD = (rate * weight).toFixed(2);
+    const totalUZS = Math.round(rate * weight * settings.dollarRate).toLocaleString('uz-UZ');
+
+    const typeIcon = service === 'avia' ? '✈️' : '🚚';
+    const bonus = weight > 1 ? '<div class="bonus-glow mt-3 p-3 rounded" style="background: linear-gradient(45deg, #28a745, #20c997); color: white; animation: pulse 2s infinite;"><strong>🎁 BONUS: Pochta bepul!</strong></div>' : '';
+
     document.getElementById('calcResult').innerHTML = `
-        <div class="text-center p-4" style="background: rgba(40,167,69,0.1); border-radius: 15px;">
-            <h3 style="color: var(--green);">$${ (rate * weight).toFixed(2) }</h3>
-            <h2>${totalUZS} so'm</h2>
-            <p>${weight > 1 ? '🎁 Pochta bepul!' : ''}</p>
+        <div class="text-center animate__animated animate__bounceIn">
+            <h2 style="font-size: 48px; margin: 20px 0; color: var(--primary);">${typeIcon}</h2>
+            <div class="p-4 rounded" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; box-shadow: 0 10px 30px rgba(240,147,251,0.4);">
+                <h1 style="font-size: 36px; margin: 0;">$${totalUSD}</h1>
+                <p style="font-size: 18px; margin: 10px 0;">${rate} $/kg${isHigh ? ' <small>(yuqori narx)</small>' : ''}</p>
+            </div>
+            <h2 style="font-size: 32px; margin: 20px 0; color: var(--green);">${totalUZS} so'm</h2>
+            ${bonus}
         </div>
     `;
 }
 
-// Track management - now saves details
+// Track management
 function addTrackNumbers() {
     const input = document.getElementById('trackInput').value.trim();
     if (!input) return alert('Trek raqam kiriting!');
@@ -222,7 +246,7 @@ function deleteTrack(i) {
     }
 }
 
-// Search with your exact Excel structure
+// Track search - 100% working with your Excel
 function findTrackInAllFiles(code) {
     code = code.trim();
     for (const file of allExcelData) {
@@ -247,7 +271,7 @@ function sendMessage() {
     if (text) {
         clientMessages.unshift({ id: currentUser.id, message: text, time: new Date().toLocaleString('uz-UZ') });
         localStorage.setItem('jekClientMessages', JSON.stringify(clientMessages));
-        alert('Xabar yuborildi! Tez orada javob beramiz.');
+        alert('Xabar yuborildi!');
         document.getElementById('messageText').value = '';
     }
 }
@@ -262,6 +286,7 @@ function showAdminPanel() {
     document.querySelector('.bottom-nav').style.display = 'none';
     document.getElementById('pageTitle').textContent = 'ADMIN';
     document.getElementById('adminPanel').style.display = 'block';
+    renderAdminPanel();
 }
 
 function uploadExcel() {
@@ -279,9 +304,43 @@ function uploadExcel() {
             allExcelData.push(fileInfo);
             saveAllExcelData();
             alert(`"${fileInfo.name}" yuklandi!`);
+            renderAdminPanel();
         } catch (err) {
             alert('Xato: ' + err.message);
         }
     };
     reader.readAsArrayBuffer(input.files[0]);
+}
+
+function renderAdminPanel() {
+    const fileList = document.getElementById('fileList');
+    fileList.innerHTML = allExcelData.length === 0 
+        ? '<p class="text-white-50">Fayl yo\'q</p>'
+        : allExcelData.map((f, i) => `
+            <div class="file-item">
+                <div>
+                    <strong>${f.name}</strong><br>
+                    <small>${f.data.length} ta trek</small>
+                </div>
+                <button class="delete-file-btn" onclick="deleteExcelFile(${i})">O'chirish</button>
+            </div>
+        `).join('');
+
+    // Other admin sections (messages, clients) remain as before
+}
+
+function deleteExcelFile(index) {
+    if (confirm('Bu faylni o\'chirmoqchimisiz?')) {
+        allExcelData.splice(index, 1);
+        saveAllExcelData();
+        renderAdminPanel();
+    }
+}
+
+function savePrices() {
+    settings.dollarRate = parseFloat(document.getElementById('dollarRate').value) || 12600;
+    settings.aviaPrice = parseFloat(document.getElementById('aviaPrice').value) || 9.5;
+    settings.avtoPrice = parseFloat(document.getElementById('avtoPrice').value) || 6;
+    localStorage.setItem('jekSettings', JSON.stringify(settings));
+    alert('Saqlandi!');
 }
