@@ -1,5 +1,5 @@
-let currentUser = { id: '', registrationDate: '', trackingNumbers: [], isAdmin: false };
-let allExcelData = []; // {name, data: []}
+let currentUser = { id: '', registrationDate: '', tracks: [], isAdmin: false }; // tracks = array of {code, details}
+let allExcelData = [];
 let settings = { dollarRate: 12600, aviaPrice: 9.5, avtoPrice: 6.0 };
 let clientMessages = [];
 
@@ -33,7 +33,7 @@ function loadClientMessages() {
     if (saved) clientMessages = JSON.parse(saved);
 }
 
-// Persistent user data
+// User persistence
 function getUserKey(id) {
     return 'jekUser_' + id;
 }
@@ -73,7 +73,7 @@ function promptLogin() {
             continue;
         }
         if (input === 's08121719') {
-            currentUser = { id: 'ADMIN', isAdmin: true, registrationDate: new Date().toLocaleDateString('uz-UZ'), trackingNumbers: [] };
+            currentUser = { id: 'ADMIN', isAdmin: true, registrationDate: new Date().toLocaleDateString('uz-UZ'), tracks: [] };
             saveUserData();
             showAdminPanel();
             return;
@@ -81,7 +81,7 @@ function promptLogin() {
         if (/^\d{3,4}$/.test(input)) {
             let user = loadUserData(input);
             if (!user) {
-                user = { id: input, registrationDate: new Date().toLocaleDateString('uz-UZ'), trackingNumbers: [], isAdmin: false };
+                user = { id: input, registrationDate: new Date().toLocaleDateString('uz-UZ'), tracks: [], isAdmin: false };
             }
             currentUser = user;
             saveUserData();
@@ -96,7 +96,7 @@ function promptLogin() {
 function updateProfile() {
     document.getElementById('profileId').textContent = currentUser.id;
     document.getElementById('profileDate').textContent = currentUser.registrationDate;
-    document.getElementById('profileOrders').textContent = currentUser.trackingNumbers.length;
+    document.getElementById('profileOrders').textContent = currentUser.tracks.length;
 }
 
 function logout() {
@@ -121,7 +121,7 @@ function openOverlay(id, type = null) {
         const isAvia = type === 'avia';
         document.getElementById('addressTitle').textContent = isAvia ? 'Xitoy manzili (AVIA)' : 'Xitoy manzili (AVTO)';
         const phone = isAvia ? '18699944426' : '13819957009';
-        const address = `收货人: JEK${currentUser.id} ${isAvia ? 'AVIA' : ''}\n手机号码: ${phone}\n浙江省金华市义乌市荷叶塘东青路89号618仓库(JEK${currentUser.id})`;
+        const address = `Recipent: JEK${currentUser.id} ${isAvia ? 'AVIA' : ''}\nPhone: ${phone}\nZhejiang Jinhua Yiwu City Heyetang Dongqing Road 89 No. 618 Warehouse (JEK${currentUser.id})`;
         document.getElementById('addressContent').textContent = address;
         window.currentAddressText = address;
     }
@@ -139,38 +139,30 @@ function copyAddress() {
 // Calculator
 function calculatePrice() {
     const service = document.getElementById('calcService').value;
-    const items = parseInt(document.getElementById('calcItems').value) || 1;
     const weight = parseFloat(document.getElementById('calcWeight').value);
-    const dims = document.getElementById('calcDimensions').value.trim();
-
     if (!weight || weight <= 0) return alert('Og\'irlikni kiriting!');
-
-    let maxDim = 0;
-    if (dims) {
-        const parts = dims.split(/[xX×*]/).map(p => parseFloat(p.trim())).filter(n => !isNaN(n));
-        if (parts.length === 3) maxDim = Math.max(...parts);
-    }
-
-    const isHigh = (items >= 5) || (maxDim > 50);
-    const rate = isHigh ? (service === 'avia' ? 11 : 7.5) : (service === 'avia' ? settings.aviaPrice : settings.avtoPrice);
-    const totalUSD = (rate * weight).toFixed(2);
-    const totalUZS = Math.round(rate * weight * settings.dollarRate).toLocaleString('uz-UZ');
-
+    const rate = service === 'avia' ? settings.aviaPrice : settings.avtoPrice;
+    const totalUZS = Math.round(weight * rate * settings.dollarRate).toLocaleString('uz-UZ');
     document.getElementById('calcResult').innerHTML = `
-        <div class="alert alert-success text-center p-4">
-            <h4>$${totalUSD} (${rate}$/kg)${isHigh ? ' <small>(yuqori narx)</small>' : ''}</h4>
-            <h5>${totalUZS} so'm</h5>
-            ${weight > 1 ? '<p><strong>Bonus: Pochta bepul!</strong></p>' : ''}
+        <div class="text-center p-4" style="background: rgba(40,167,69,0.1); border-radius: 15px;">
+            <h3 style="color: var(--green);">$${ (rate * weight).toFixed(2) }</h3>
+            <h2>${totalUZS} so'm</h2>
+            <p>${weight > 1 ? '🎁 Pochta bepul!' : ''}</p>
         </div>
     `;
 }
 
-// Track numbers
+// Track management - now saves details
 function addTrackNumbers() {
     const input = document.getElementById('trackInput').value.trim();
     if (!input) return alert('Trek raqam kiriting!');
     const codes = input.split(',').map(c => c.trim());
-    currentUser.trackingNumbers = [...new Set([...currentUser.trackingNumbers, ...codes])];
+    codes.forEach(code => {
+        if (!currentUser.tracks.find(t => t.code === code)) {
+            const details = findTrackInAllFiles(code);
+            currentUser.tracks.push({ code, details: details || null });
+        }
+    });
     saveUserData();
     loadTrackingNumbers();
     document.getElementById('trackInput').value = '';
@@ -178,39 +170,42 @@ function addTrackNumbers() {
 
 function loadTrackingNumbers() {
     const container = document.getElementById('trackList');
-    if (currentUser.trackingNumbers.length === 0) {
-        container.innerHTML = '<div class="text-center text-muted p-4">Hali trek raqam yo\'q</div>';
+    if (currentUser.tracks.length === 0) {
+        container.innerHTML = '<div class="text-center text-muted p-5">Hali trek raqam qo\'shilmagan</div>';
         return;
     }
 
-    container.innerHTML = currentUser.trackingNumbers.map((code, i) => {
-        const data = findTrackInAllFiles(code);
-        let info = '<small>Kutilmoqda...</small>';
-        if (data) {
-            const type = data.fileName.includes('Avia') ? 'Avia' : 'Avto';
+    container.innerHTML = currentUser.tracks.map((track, i) => {
+        const d = track.details;
+        const type = d ? (d.fileName.toLowerCase().includes('avia') ? 'Avia' : 'Avto') : null;
+        const icon = type === 'Avia' ? '✈️' : type === 'Avto' ? '🚚' : '📦';
+        const color = type === 'Avia' ? var(--blue) : type === 'Avto' ? var(--green) : '#999';
+
+        let info = '<small style="color:#999;">Ma\'lumot yuklanmoqda...</small>';
+        if (d) {
             const rate = type === 'Avia' ? settings.aviaPrice : settings.avtoPrice;
-            const cost = Math.round(data.weight * rate * settings.dollarRate);
-            const recDate = new Date(data.receiptDate);
+            const cost = Math.round(d.weight * rate * settings.dollarRate);
+            const recDate = new Date(d.receiptDate);
             const minDays = type === 'Avia' ? 3 : 14;
             const maxDays = type === 'Avia' ? 5 : 18;
             const minDate = new Date(recDate); minDate.setDate(recDate.getDate() + minDays);
             const maxDate = new Date(recDate); maxDate.setDate(recDate.getDate() + maxDays);
 
             info = `
-                <div style="font-size:14px;">
-                    <strong>${data.product}</strong><br>
-                    Og'irlik: ${data.weight} kg<br>
-                    Xitoyga kelgan: ${data.receiptDate}<br>
-                    Taxminiy yetib kelish: ${minDate.toLocaleDateString('uz-UZ')} - ${maxDate.toLocaleDateString('uz-UZ')}<br>
-                    Narx taxminan: ${cost.toLocaleString()} so'm
+                <div style="margin-top:10px; font-size:15px;">
+                    <div><strong>Mahsulot:</strong> ${d.product}</div>
+                    <div><strong>Og'irlik:</strong> ${d.weight} kg</div>
+                    <div><strong>Xitoyga kelgan:</strong> ${d.receiptDate}</div>
+                    <div><strong>Taxminiy yetib kelish:</strong> ${minDate.toLocaleDateString('uz-UZ')} - ${maxDate.toLocaleDateString('uz-UZ')}</div>
+                    <div><strong>Narx taxminan:</strong> ${cost.toLocaleString()} so'm</div>
                 </div>
             `;
         }
 
         return `
-            <div class="track-item">
+            <div class="track-item ${type ? type.toLowerCase() : ''}">
                 <div>
-                    <strong>${code}</strong><br>
+                    <div class="track-code">${icon} ${track.code}</div>
                     ${info}
                 </div>
                 <button class="delete-btn" onclick="event.stopPropagation(); deleteTrack(${i})">×</button>
@@ -221,25 +216,25 @@ function loadTrackingNumbers() {
 
 function deleteTrack(i) {
     if (confirm('Bu trekni o\'chirmoqchimisiz?')) {
-        currentUser.trackingNumbers.splice(i, 1);
+        currentUser.tracks.splice(i, 1);
         saveUserData();
         loadTrackingNumbers();
     }
 }
 
-// Fixed search for your Excel format
+// Search with your exact Excel structure
 function findTrackInAllFiles(code) {
     code = code.trim();
     for (const file of allExcelData) {
         for (const row of file.data) {
-            // Check all possible fields for tracking code
-            const possibleTrack = row['追踪代码'] || row['追踪代码 '] || row[2] || '';
-            if (possibleTrack.toString().trim() === code) {
+            if (row.length < 3) continue;
+            const track = (row[2] || '').toString().trim();
+            if (track === code) {
                 return {
                     fileName: file.name,
-                    weight: parseFloat(row['重量/KG'] || row['重量'] || row[5] || 0),
-                    receiptDate: row['收货日期'] || row[1] || 'Noma\'lum',
-                    product: row['货物名称'] || row['货物名称 Название товара'] || row[3] || 'Noma\'lum'
+                    weight: parseFloat(row[6] || row[9] || 0),
+                    receiptDate: row[1] || 'Noma\'lum',
+                    product: row[3] || row[4] || 'Mahsulot nomi yo\'q'
                 };
             }
         }
@@ -252,7 +247,7 @@ function sendMessage() {
     if (text) {
         clientMessages.unshift({ id: currentUser.id, message: text, time: new Date().toLocaleString('uz-UZ') });
         localStorage.setItem('jekClientMessages', JSON.stringify(clientMessages));
-        alert('Xabar yuborildi!');
+        alert('Xabar yuborildi! Tez orada javob beramiz.');
         document.getElementById('messageText').value = '';
     }
 }
@@ -267,7 +262,6 @@ function showAdminPanel() {
     document.querySelector('.bottom-nav').style.display = 'none';
     document.getElementById('pageTitle').textContent = 'ADMIN';
     document.getElementById('adminPanel').style.display = 'block';
-    renderAdminPanel();
 }
 
 function uploadExcel() {
@@ -279,59 +273,15 @@ function uploadExcel() {
         try {
             const data = new Uint8Array(e.target.result);
             const wb = XLSX.read(data, { type: 'array' });
-            const sheet = wb.Sheets[wb.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 }); // array of arrays
-            const rows = json.slice(1); // skip header
+            const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+            const rows = json.slice(1);
             const fileInfo = { name: input.files[0].name, data: rows };
             allExcelData.push(fileInfo);
             saveAllExcelData();
-            alert(`"${fileInfo.name}" yuklandi! (${rows.length} ta qator)`);
-            renderAdminPanel(); // if admin
+            alert(`"${fileInfo.name}" yuklandi!`);
         } catch (err) {
             alert('Xato: ' + err.message);
         }
     };
     reader.readAsArrayBuffer(input.files[0]);
 }
-
-function findTrackInAllFiles(code) {
-    code = code.trim();
-    for (const file of allExcelData) {
-        for (const row of file.data) {
-            if (row.length < 3) continue; // skip invalid rows
-            const track = (row[2] || '').toString().trim();
-            if (track === code) {
-                const type = file.name.toLowerCase().includes('avia') ? 'Avia' : 'Avto';
-                return {
-                    fileName: file.name,
-                    type: type,
-                    weight: parseFloat(row[6] || row[9] || 0) || 0,
-                    receiptDate: row[1] || 'Noma\'lum',
-                    product: row[3] || row[4] || 'Noma\'lum'
-                };
-            }
-        }
-    }
-    return null;
-}
-function renderAdminPanel() {
-    document.getElementById('fileList').innerHTML = allExcelData.length === 0 
-        ? '<p class="text-muted">Fayl yo\'q</p>'
-        : allExcelData.map(f => `<div class="border-bottom py-2"><strong>${f.name}</strong></div>`).join('');
-
-    document.getElementById('adminMessages').innerHTML = clientMessages.length === 0 
-        ? '<p class="text-muted">Xabar yo\'q</p>'
-        : clientMessages.map(m => `<div class="border-bottom py-2"><strong>ID ${m.id}</strong><br>${m.message}<br><small>${m.time}</small></div>`).join('');
-
-    // Client list (simplified)
-    document.getElementById('clientList').innerHTML = '<p class="text-muted">Mijozlar ro\'yxati</p>';
-}
-
-function savePrices() {
-    settings.dollarRate = parseFloat(document.getElementById('dollarRate').value) || 12600;
-    settings.aviaPrice = parseFloat(document.getElementById('aviaPrice').value) || 9.5;
-    settings.avtoPrice = parseFloat(document.getElementById('avtoPrice').value) || 6;
-    localStorage.setItem('jekSettings', JSON.stringify(settings));
-    alert('Saqlandi!');
-}
-
