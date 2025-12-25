@@ -5,10 +5,7 @@ let currentUser = {
     isAdmin: false
 };
 
-let excelFiles = [];
-let activeFileId = null;
 let excelData = [];
-
 let settings = {
     dollarRate: 12600,
     aviaPrice: 9.5,
@@ -17,38 +14,26 @@ let settings = {
     avtoHighPrice: 7.5
 };
 
-let currentAddress = '';
-
 window.onload = function() {
-    loadEverything();
+    loadSettings();
+    loadExcelData();
     checkLogin();
 };
-
-function loadEverything() {
-    loadSettings();
-    loadExcelFiles();
-}
 
 function loadSettings() {
     const saved = localStorage.getItem('jekSettings');
     if (saved) settings = { ...settings, ...JSON.parse(saved) };
 }
 
-function loadExcelFiles() {
-    const saved = localStorage.getItem('jekExcelFiles');
-    if (saved) excelFiles = JSON.parse(saved);
-
-    const active = localStorage.getItem('jekActiveFileId');
-    if (active && excelFiles.length > 0) {
-        activeFileId = active;
-        const file = excelFiles.find(f => f.id === activeFileId);
-        if (file) excelData = file.data;
+function loadExcelData() {
+    const saved = localStorage.getItem('jekExcelData');
+    if (saved) {
+        excelData = JSON.parse(saved);
     }
 }
 
-function saveExcelFiles() {
-    localStorage.setItem('jekExcelFiles', JSON.stringify(excelFiles));
-    localStorage.setItem('jekActiveFileId', activeFileId || '');
+function saveExcelData() {
+    localStorage.setItem('jekExcelData', JSON.stringify(excelData));
 }
 
 function saveUserData() {
@@ -70,12 +55,10 @@ function checkLogin() {
     }
 }
 
-// Secret admin access - only you know the code
 function promptLogin() {
     let input;
     while (true) {
         input = prompt('ID kodingizni kiriting (3 yoki 4 raqamli son):').trim();
-
         if (!input) {
             alert('ID kiritish majburiy!');
             continue;
@@ -112,7 +95,7 @@ function updateProfile() {
 }
 
 function logout() {
-    if (confirm('Chiqmoqchimisiz?')) {
+    if (confirm('Chiqish?')) {
         localStorage.removeItem('jekCurrentUser');
         location.reload();
     }
@@ -127,40 +110,85 @@ function changePage(page) {
     if (page === 'buyurtmalar') loadTrackingNumbers();
 }
 
-// ... (keep your address, calculator, etc. functions as before)
+// Address functions (example)
+function showAddress(type) {
+    const id = currentUser.id;
+    let text = type === 'avia' 
+        ? `收货人: JEK${id} AVIA\n手机号码: 18699944426\n浙江省金华市义乌市荷叶塘东青路89号618仓库(JEK${id})`
+        : `收货人: JEK${id}\n手机号码: 13819957009\n浙江省金华市义乌市荷叶塘东青路89号618仓库(JEK${id})`;
+    alert(text);
+}
+
+function showTopshirish() {
+    alert('Toshkent asosiy\nNamangan Sardoba');
+}
+
+function showPochtaBepul() {
+    alert('1 kg+ yuklarda EMU EXPRESS bepul!');
+}
+
+function showCalculator() {
+    changePage('calculatorPage'); // if you have one, or alert
+}
+
+function addTrackNumbers() {
+    const input = document.getElementById('trackInput').value.trim();
+    if (!input) return alert('Trek kiriting!');
+    const codes = input.split(',').map(c => c.trim().toUpperCase());
+    currentUser.trackingNumbers = [...new Set([...currentUser.trackingNumbers, ...codes])];
+    saveUserData();
+    loadTrackingNumbers();
+    document.getElementById('trackInput').value = '';
+}
+
+function loadTrackingNumbers() {
+    const list = document.getElementById('trackList');
+    if (currentUser.trackingNumbers.length === 0) {
+        list.innerHTML = '<p class="text-center text-muted">Hali trek yo\'q</p>';
+        return;
+    }
+    list.innerHTML = currentUser.trackingNumbers.map((code, i) => {
+        const data = excelData.find(t => (t.trackingCode || '').toUpperCase() === code);
+        const status = data ? 'Ma\'lumot bor' : 'Kutilmoqda';
+        return `
+            <div class="track-item">
+                <div>
+                    <strong>${code}</strong><br>
+                    <small>${status}</small>
+                </div>
+                <button class="delete-btn" onclick="event.stopPropagation(); deleteTrack(${i})">×</button>
+            </div>
+        `;
+    }).join('');
+}
+
+function deleteTrack(i) {
+    if (confirm('O\'chirish?')) {
+        currentUser.trackingNumbers.splice(i, 1);
+        saveUserData();
+        loadTrackingNumbers();
+    }
+}
+
+function sendMessage() {
+    const text = document.getElementById('messageText').value.trim();
+    if (text) {
+        alert('Xabar yuborildi!');
+        document.getElementById('messageText').value = '';
+    }
+}
+
+function openAdminChat() {
+    window.open('https://t.me/jekkargo', '_blank');
+}
 
 // Admin Panel
 function showAdminPanel() {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.getElementById('pageTitle').textContent = 'ADMIN PANEL';
     document.querySelector('.bottom-nav').style.display = 'none';
-
-    document.getElementById('asosiyPage').innerHTML = `
-        <div class="card">
-            <h3>Yangi Excel yuklash</h3>
-            <input type="file" id="excelUpload" accept=".xlsx">
-            <button class="btn" onclick="uploadExcel()">Yuklash va faol qilish</button>
-        </div>
-        <div class="card">
-            <h3>Yuklangan fayllar</h3>
-            <div id="fileList"></div>
-        </div>
-        <div class="card">
-            <h3>Narx sozlamalari</h3>
-            <div class="input-group"><label>Dollar kursi</label><input type="number" id="dollarRate" value="${settings.dollarRate}"></div>
-            <div class="input-group"><label>Avia oddiy</label><input type="number" step="0.1" id="aviaPrice" value="${settings.aviaPrice}"></div>
-            <div class="input-group"><label>Avia yuqori</label><input type="number" step="0.1" id="aviaHighPrice" value="${settings.aviaHighPrice}"></div>
-            <div class="input-group"><label>Avto oddiy</label><input type="number" step="0.1" id="avtoPrice" value="${settings.avtoPrice}"></div>
-            <div class="input-group"><label>Avto yuqori</label><input type="number" step="0.1" id="avtoHighPrice" value="${settings.avtoHighPrice}"></div>
-            <button class="btn" onclick="savePrices()">Saqlash</button>
-        </div>
-        <div class="card">
-            <button class="btn" style="background:#dc3545;" onclick="logout()">Chiqish</button>
-        </div>
-    `;
-
-    document.getElementById('asosiyPage').classList.add('active');
-    renderFileList();
+    document.getElementById('pageTitle').textContent = 'ADMIN';
+    document.getElementById('adminPanel').style.display = 'block';
+    updateAdminInputs();
 }
 
 function uploadExcel() {
@@ -172,22 +200,9 @@ function uploadExcel() {
         try {
             const data = new Uint8Array(e.target.result);
             const wb = XLSX.read(data, { type: 'array' });
-            const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-
-            const newFile = {
-                id: Date.now().toString(),
-                name: input.files[0].name,
-                date: new Date().toLocaleString('uz-UZ'),
-                count: json.length,
-                data: json
-            };
-
-            excelFiles.push(newFile);
-            activeFileId = newFile.id;
-            excelData = json;
-            saveExcelFiles();
-            alert(`"${newFile.name}" yuklandi va faol!`);
-            renderFileList();
+            excelData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            saveExcelData();
+            alert(`Yuklandi! ${excelData.length} ta trek`);
         } catch (err) {
             alert('Xato: ' + err.message);
         }
@@ -195,43 +210,12 @@ function uploadExcel() {
     reader.readAsArrayBuffer(input.files[0]);
 }
 
-function renderFileList() {
-    const container = document.getElementById('fileList');
-    container.innerHTML = excelFiles.length === 0 
-        ? '<p class="text-center text-muted">Fayl yo\'q</p>'
-        : excelFiles.map(f => `
-            <div class="d-flex justify-content-between align-items-center p-3 border mb-2 rounded">
-                <div>
-                    <strong>${f.name}</strong><br>
-                    <small>${f.date} | ${f.count} trek</small>
-                </div>
-                <div>
-                    <button class="btn ${f.id === activeFileId ? 'btn-success' : 'btn-outline-primary'} btn-sm me-2" onclick="activateFile('${f.id}')">
-                        ${f.id === activeFileId ? 'Faol' : 'Faol qilish'}
-                    </button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteFile('${f.id}')">O'chirish</button>
-                </div>
-            </div>
-        `).join('');
-}
-
-function activateFile(id) {
-    activeFileId = id;
-    excelData = excelFiles.find(f => f.id === id).data;
-    saveExcelFiles();
-    alert('Faol fayl yangilandi!');
-    renderFileList();
-}
-
-function deleteFile(id) {
-    if (!confirm('O\'chirmoqchimisiz?')) return;
-    excelFiles = excelFiles.filter(f => f.id !== id);
-    if (activeFileId === id) {
-        activeFileId = excelFiles.length > 0 ? excelFiles[0].id : null;
-        excelData = activeFileId ? excelFiles.find(f => f.id === activeFileId).data : [];
-    }
-    saveExcelFiles();
-    renderFileList();
+function updateAdminInputs() {
+    document.getElementById('dollarRate').value = settings.dollarRate;
+    document.getElementById('aviaPrice').value = settings.aviaPrice;
+    document.getElementById('aviaHighPrice').value = settings.aviaHighPrice;
+    document.getElementById('avtoPrice').value = settings.avtoPrice;
+    document.getElementById('avtoHighPrice').value = settings.avtoHighPrice;
 }
 
 function savePrices() {
@@ -242,11 +226,4 @@ function savePrices() {
     settings.avtoHighPrice = parseFloat(document.getElementById('avtoHighPrice').value) || 7.5;
     localStorage.setItem('jekSettings', JSON.stringify(settings));
     alert('Saqlandi!');
-}
-
-// ... (keep your other functions: addTrackNumbers, loadTrackingNumbers, calculatePrice, etc.)
-
-// Close overlays
-function closeOverlay() {
-    document.querySelectorAll('.overlay').forEach(o => o.classList.remove('active'));
 }
