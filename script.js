@@ -1,9 +1,8 @@
 let currentUser = { id: '', registrationDate: '', trackingNumbers: [], isAdmin: false };
-let allExcelData = []; // All data from all uploaded files
+let allExcelData = []; // All files
 let settings = { dollarRate: 12600, aviaPrice: 9.5, avtoPrice: 6.0 };
 let clientMessages = [];
 let adminLogs = [];
-let uploadedFiles = []; // List of uploaded file names
 
 window.onload = function() {
     loadAllData();
@@ -12,10 +11,9 @@ window.onload = function() {
 
 function loadAllData() {
     loadSettings();
-    loadExcelData();
+    loadAllExcelData();
     loadClientMessages();
     loadAdminLogs();
-    loadUploadedFiles();
 }
 
 function loadSettings() {
@@ -23,12 +21,12 @@ function loadSettings() {
     if (saved) settings = JSON.parse(saved);
 }
 
-function loadExcelData() {
+function loadAllExcelData() {
     const saved = localStorage.getItem('jekAllExcelData');
     if (saved) allExcelData = JSON.parse(saved);
 }
 
-function saveExcelData() {
+function saveAllExcelData() {
     localStorage.setItem('jekAllExcelData', JSON.stringify(allExcelData));
 }
 
@@ -42,23 +40,27 @@ function loadAdminLogs() {
     if (saved) adminLogs = JSON.parse(saved);
 }
 
-function loadUploadedFiles() {
-    const saved = localStorage.getItem('jekUploadedFiles');
-    if (saved) uploadedFiles = JSON.parse(saved);
-}
-
-function saveUploadedFiles() {
-    localStorage.setItem('jekUploadedFiles', JSON.stringify(uploadedFiles));
+// Persistent user data per ID
+function getUserKey(id) {
+    return 'jekUser_' + id;
 }
 
 function saveUserData() {
-    localStorage.setItem('jekCurrentUser', JSON.stringify(currentUser));
+    localStorage.setItem(getUserKey(currentUser.id), JSON.stringify(currentUser));
+    localStorage.setItem('jekCurrentUser', JSON.stringify(currentUser)); // for quick login
+}
+
+function loadUserData(id) {
+    const key = getUserKey(id);
+    const saved = localStorage.getItem(key);
+    if (saved) return JSON.parse(saved);
+    return null;
 }
 
 function checkLogin() {
-    const saved = localStorage.getItem('jekCurrentUser');
-    if (saved) {
-        currentUser = JSON.parse(saved);
+    const current = localStorage.getItem('jekCurrentUser');
+    if (current) {
+        currentUser = JSON.parse(current);
         if (currentUser.isAdmin) {
             showAdminPanel();
         } else {
@@ -78,25 +80,27 @@ function promptLogin() {
             alert('ID majburiy!');
             continue;
         }
+
         if (input === 's08121719') {
             currentUser = { id: 'ADMIN', isAdmin: true, registrationDate: new Date().toLocaleDateString('uz-UZ'), trackingNumbers: [] };
             saveUserData();
             showAdminPanel();
             return;
         }
+
         if (/^\d{3,4}$/.test(input)) {
-            currentUser = {
-                id: input,
-                registrationDate: new Date().toLocaleDateString('uz-UZ'),
-                trackingNumbers: currentUser.trackingNumbers || [],
-                isAdmin: false
-            };
+            let user = loadUserData(input);
+            if (!user) {
+                user = { id: input, registrationDate: new Date().toLocaleDateString('uz-UZ'), trackingNumbers: [], isAdmin: false };
+            }
+            currentUser = user;
             saveUserData();
             updateProfile();
             loadTrackingNumbers();
             return;
         }
-        alert('Faqat 3 yoki 4 raqam!');
+
+        alert('ID faqat 3 yoki 4 ta raqam bo\'lishi kerak!');
     }
 }
 
@@ -107,26 +111,46 @@ function updateProfile() {
 }
 
 function logout() {
-    if (confirm('Chiqish?')) {
+    if (confirm('Chiqmoqchimisiz?')) {
         localStorage.removeItem('jekCurrentUser');
         location.reload();
     }
 }
 
-function changePage(p) {
-    document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
-    document.getElementById(p + 'Page').classList.add('active');
-    document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+function changePage(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(page + 'Page').classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
     event.currentTarget.classList.add('active');
-    document.getElementById('pageTitle').textContent = { asosiy: 'JEK KARGO', buyurtmalar: 'Buyurtmalar', chatlar: 'Chatlar', profil: 'Profil' }[p];
-    if (p === 'buyurtmalar') loadTrackingNumbers();
+    document.getElementById('pageTitle').textContent = { asosiy: 'JEK KARGO', buyurtmalar: 'Buyurtmalar', chatlar: 'Chatlar', profil: 'Profil' }[page];
+    if (page === 'buyurtmalar') loadTrackingNumbers();
 }
 
-// Track numbers
+// Big buttons work!
+function showAddress(type) {
+    const id = currentUser.id;
+    const phone = type === 'avia' ? '18699944426' : '13819957009';
+    const address = `收货人: JEK${id} ${type.toUpperCase()}\n手机号码: ${phone}\n浙江省金华市义乌市荷叶塘东青路89号618仓库(JEK${id})`;
+    alert(address);
+}
+
+function showTopshirish() {
+    alert('Topshirish punktlari:\n• Toshkent asosiy\n• Namangan Sardoba');
+}
+
+function showPochtaBepul() {
+    alert('🎁 1 kg dan ko\'p yuklarda EMU EXPRESS bepul yuboramiz!');
+}
+
+function showCalculator() {
+    alert('Kalkulyator yaqin orada qo\'shiladi!');
+}
+
+// Track numbers - now permanently saved
 function addTrackNumbers() {
-    const val = document.getElementById('trackInput').value.trim();
-    if (!val) return alert('Trek kiriting!');
-    const codes = val.split(',').map(c => c.trim().toUpperCase());
+    const input = document.getElementById('trackInput').value.trim();
+    if (!input) return alert('Trek raqam kiriting!');
+    const codes = input.split(',').map(c => c.trim().toUpperCase()).filter(c => c);
     currentUser.trackingNumbers = [...new Set([...currentUser.trackingNumbers, ...codes])];
     saveUserData();
     loadTrackingNumbers();
@@ -134,47 +158,66 @@ function addTrackNumbers() {
 }
 
 function loadTrackingNumbers() {
-    const list = document.getElementById('trackList');
+    const container = document.getElementById('trackList');
     if (currentUser.trackingNumbers.length === 0) {
-        list.innerHTML = '<p class="text-center text-muted">Hali trek yo\'q</p>';
+        container.innerHTML = '<div class="text-center text-muted p-4">Hali trek raqam yo\'q</div>';
         return;
     }
 
-    list.innerHTML = currentUser.trackingNumbers.map(code => {
-        const item = findInAllFiles(code);
+    container.innerHTML = currentUser.trackingNumbers.map((code, i) => {
+        const data = findTrackInAllFiles(code);
         let info = '<small>Kutilmoqda...</small>';
-        if (item) {
-            const type = item.fileName.includes('Avia') ? 'Avia' : 'Avto';
+        if (data) {
+            const type = data.fileName.includes('Avia') ? 'Avia' : 'Avto';
             const rate = type === 'Avia' ? settings.aviaPrice : settings.avtoPrice;
-            const cost = Math.round(item.weight * rate * settings.dollarRate);
-            const recDate = new Date(item.receiptDate);
+            const cost = Math.round(data.weight * rate * settings.dollarRate);
+            const recDate = new Date(data.receiptDate);
             const minDays = type === 'Avia' ? 3 : 14;
             const maxDays = type === 'Avia' ? 5 : 18;
             const minDate = new Date(recDate); minDate.setDate(recDate.getDate() + minDays);
             const maxDate = new Date(recDate); maxDate.setDate(recDate.getDate() + maxDays);
 
             info = `
-                <strong>${item.product}</strong><br>
-                Og'irlik: ${item.weight} kg<br>
-                Xitoyga kelgan: ${item.receiptDate}<br>
-                Taxminiy yetib kelish: ${minDate.toLocaleDateString('uz-UZ')} - ${maxDate.toLocaleDateString('uz-UZ')}<br>
-                Taxminiy narx: ${cost.toLocaleString()} so'm
+                <div style="font-size:14px;">
+                    <strong>${data.product}</strong><br>
+                    Og'irlik: ${data.weight} kg<br>
+                    Xitoyga kelgan: ${data.receiptDate}<br>
+                    Taxminiy yetib kelish: ${minDate.toLocaleDateString('uz-UZ')} - ${maxDate.toLocaleDateString('uz-UZ')}<br>
+                    Narx taxminan: ${cost.toLocaleString()} so'm
+                </div>
             `;
         }
-        return `<div class="track-item"><div><strong>${code}</strong><br>${info}</div></div>`;
+
+        return `
+            <div class="track-item">
+                <div>
+                    <strong>${code}</strong><br>
+                    ${info}
+                </div>
+                <button class="delete-btn" onclick="event.stopPropagation(); deleteTrack(${i})">×</button>
+            </div>
+        `;
     }).join('');
 }
 
-function findInAllFiles(code) {
+function deleteTrack(i) {
+    if (confirm('Bu trekni o\'chirmoqchimisiz?')) {
+        currentUser.trackingNumbers.splice(i, 1);
+        saveUserData();
+        loadTrackingNumbers();
+    }
+}
+
+function findTrackInAllFiles(code) {
     code = code.toUpperCase();
     for (const file of allExcelData) {
         const row = file.data.find(r => (r['追踪代码'] || '').toString().toUpperCase() === code);
         if (row) {
             return {
                 fileName: file.name,
-                weight: parseFloat(row['重量/KG'] || row['重量'] || 0),
-                receiptDate: row['收货日期'] || 'Noma\'lum',
-                product: row['货物名称'] || row['Название товара'] || 'Noma\'lum'
+                weight: parseFloat(r['重量/KG'] || r['重量'] || 0),
+                receiptDate: r['收货日期'] || 'Noma\'lum',
+                product: r['货物名称'] || r['Название товара'] || 'Noma\'lum'
             };
         }
     }
@@ -201,7 +244,7 @@ function showAdminPanel() {
     document.querySelector('.bottom-nav').style.display = 'none';
     document.getElementById('pageTitle').textContent = 'ADMIN';
     document.getElementById('adminPanel').style.display = 'block';
-    renderAdminView();
+    renderAdminPanel();
 }
 
 function uploadExcel() {
@@ -216,12 +259,9 @@ function uploadExcel() {
             const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
             const fileInfo = { name: input.files[0].name, date: new Date().toLocaleString('uz-UZ'), data: json };
             allExcelData.push(fileInfo);
-            uploadedFiles.push(input.files[0].name);
-            saveExcelData();
-            saveUploadedFiles();
-            alert(`"${input.files[0].name}" yuklandi! Endi barcha fayllardan qidiriladi.`);
-            adminLog(`Yangi fayl yuklandi: ${input.files[0].name}`);
-            renderAdminView();
+            saveAllExcelData();
+            alert(`"${fileInfo.name}" yuklandi! Endi barcha fayllardan qidiriladi.`);
+            renderAdminPanel();
         } catch (err) {
             alert('Xato: ' + err.message);
         }
@@ -229,51 +269,46 @@ function uploadExcel() {
     reader.readAsArrayBuffer(input.files[0]);
 }
 
-function renderAdminView() {
-    document.getElementById('fileList').innerHTML = uploadedFiles.length === 0 
-        ? '<p class="text-muted">Hali fayl yo\'q</p>'
-        : uploadedFiles.map(n => `<div class="p-2 border-bottom">${n}</div>`).join('');
+function renderAdminPanel() {
+    document.getElementById('fileList').innerHTML = allExcelData.length === 0 
+        ? '<p class="text-muted">Fayl yo\'q</p>'
+        : allExcelData.map(f => `<div class="border-bottom py-2"><strong>${f.name}</strong> (${f.data.length} trek)</div>`).join('');
 
-    // Messages
-    const msgCont = document.getElementById('adminMessages');
-    msgCont.innerHTML = clientMessages.length === 0 
+    document.getElementById('adminMessages').innerHTML = clientMessages.length === 0 
         ? '<p class="text-muted">Xabar yo\'q</p>'
-        : clientMessages.map(m => `<div class="border-bottom pb-2"><strong>ID ${m.id}</strong><br>${m.message}<br><small>${m.time}</small></div>`).join('');
+        : clientMessages.map(m => `<div class="border-bottom py-2"><strong>ID ${m.id}</strong><br>${m.message}<br><small>${m.time}</small></div>`).join('');
 
-    // Client list
-    const savedUsers = [];
+    // List all clients
+    const clients = [];
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key.startsWith('jekUser_')) {
+        if (key.startsWith('jekUser_') && !key.includes('ADMIN')) {
             const user = JSON.parse(localStorage.getItem(key));
-            if (!user.isAdmin) savedUsers.push(user);
+            clients.push(user);
         }
     }
-    const clientCont = document.getElementById('clientList');
-    clientCont.innerHTML = savedUsers.length === 0 
+    document.getElementById('clientList').innerHTML = clients.length === 0 
         ? '<p class="text-muted">Mijoz yo\'q</p>'
-        : savedUsers.map(u => `
-            <div class="border-bottom pb-3 mb-3">
+        : clients.map(u => `
+            <div class="border-bottom py-3">
                 <strong>ID: ${u.id}</strong> (${u.trackingNumbers.length} trek)<br>
-                <small>Treklar: ${u.trackingNumbers.join(', ') || 'yo\'q'}</small><br>
-                <button class="btn btn-sm btn-danger mt-2" onclick="deleteClientTracks('${u.id}')">Treklarini o'chirish</button>
+                Treklar: ${u.trackingNumbers.join(', ') || 'yo\'q'}<br>
+                <button class="btn btn-sm btn-danger mt-2" onclick="deleteUserTracks('${u.id}')">Treklarini o'chirish</button>
             </div>
         `).join('');
 
-    // Logs
     document.getElementById('adminLogs').innerHTML = adminLogs.length === 0 
         ? '<p class="text-muted">Log yo\'q</p>'
         : adminLogs.map(l => `<div><small>${l.time}</small> ${l.msg}</div>`).join('');
 }
 
-function deleteClientTracks(id) {
-    if (confirm(`ID ${id} ning barcha treklarini o'chirmoqchimisiz?`)) {
-        const key = 'jekUser_' + id;
-        const user = JSON.parse(localStorage.getItem(key) || '{}');
+function deleteUserTracks(id) {
+    if (confirm(`ID ${id} treklarini o'chirish?`)) {
+        const key = getUserKey(id);
+        const user = JSON.parse(localStorage.getItem(key));
         user.trackingNumbers = [];
         localStorage.setItem(key, JSON.stringify(user));
-        adminLog(`ID ${id} treklar o'chirildi`);
-        renderAdminView();
+        renderAdminPanel();
     }
 }
 
@@ -283,16 +318,4 @@ function savePrices() {
     settings.avtoPrice = parseFloat(document.getElementById('avtoPrice').value) || 6;
     localStorage.setItem('jekSettings', JSON.stringify(settings));
     alert('Saqlandi!');
-    adminLog('Narxlar yangilandi');
 }
-
-function adminLog(msg) {
-    adminLogs.unshift({ time: new Date().toLocaleTimeString(), msg });
-    localStorage.setItem('jekAdminLogs', JSON.stringify(adminLogs));
-}
-
-// Dummy functions for big buttons
-function showAddress(t) { alert(t === 'avia' ? 'Avia manzil' : 'Avto manzil'); }
-function showTopshirish() { alert('Topshirish punktlari'); }
-function showPochtaBepul() { alert('1kg+ bepul pochta'); }
-function showCalculator() { alert('Kalkulyator'); }
