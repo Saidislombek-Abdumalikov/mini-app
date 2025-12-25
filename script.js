@@ -100,7 +100,7 @@ function checkLogin() {
 function promptLogin() {
     let input;
     do {
-        input = prompt('ID kodingizni kiriting (3 yoki 4 raqamli son):\nAdmin uchun: s08121719').trim();
+        input = prompt('ID kodingizni kiriting (3 yoki 4 raqamli son):').trim();
         
         if (!input) {
             alert('ID kiritish majburiy!');
@@ -450,3 +450,4 @@ function loadAdminLogsDisplay() {
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('overlay')) closeOverlay();
 });
+
