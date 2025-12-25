@@ -1,8 +1,7 @@
 let currentUser = { id: '', registrationDate: '', trackingNumbers: [], isAdmin: false };
-let allExcelData = []; // All files
+let allExcelData = [];
 let settings = { dollarRate: 12600, aviaPrice: 9.5, avtoPrice: 6.0 };
 let clientMessages = [];
-let adminLogs = [];
 
 window.onload = function() {
     loadAllData();
@@ -13,7 +12,6 @@ function loadAllData() {
     loadSettings();
     loadAllExcelData();
     loadClientMessages();
-    loadAdminLogs();
 }
 
 function loadSettings() {
@@ -35,26 +33,20 @@ function loadClientMessages() {
     if (saved) clientMessages = JSON.parse(saved);
 }
 
-function loadAdminLogs() {
-    const saved = localStorage.getItem('jekAdminLogs');
-    if (saved) adminLogs = JSON.parse(saved);
-}
-
-// Persistent user data per ID
+// User persistence
 function getUserKey(id) {
     return 'jekUser_' + id;
 }
 
 function saveUserData() {
     localStorage.setItem(getUserKey(currentUser.id), JSON.stringify(currentUser));
-    localStorage.setItem('jekCurrentUser', JSON.stringify(currentUser)); // for quick login
+    localStorage.setItem('jekCurrentUser', JSON.stringify(currentUser));
 }
 
 function loadUserData(id) {
     const key = getUserKey(id);
     const saved = localStorage.getItem(key);
-    if (saved) return JSON.parse(saved);
-    return null;
+    return saved ? JSON.parse(saved) : null;
 }
 
 function checkLogin() {
@@ -80,14 +72,12 @@ function promptLogin() {
             alert('ID majburiy!');
             continue;
         }
-
         if (input === 's08121719') {
             currentUser = { id: 'ADMIN', isAdmin: true, registrationDate: new Date().toLocaleDateString('uz-UZ'), trackingNumbers: [] };
             saveUserData();
             showAdminPanel();
             return;
         }
-
         if (/^\d{3,4}$/.test(input)) {
             let user = loadUserData(input);
             if (!user) {
@@ -99,8 +89,7 @@ function promptLogin() {
             loadTrackingNumbers();
             return;
         }
-
-        alert('ID faqat 3 yoki 4 ta raqam bo\'lishi kerak!');
+        alert('ID faqat 3 yoki 4 raqam bo\'lishi kerak!');
     }
 }
 
@@ -126,27 +115,59 @@ function changePage(page) {
     if (page === 'buyurtmalar') loadTrackingNumbers();
 }
 
-// Big buttons work!
-function showAddress(type) {
-    const id = currentUser.id;
-    const phone = type === 'avia' ? '18699944426' : '13819957009';
-    const address = `收货人: JEK${id} ${type.toUpperCase()}\n手机号码: ${phone}\n浙江省金华市义乌市荷叶塘东青路89号618仓库(JEK${id})`;
-    alert(address);
+// Overlays
+function openOverlay(id, type = null) {
+    if (id === 'addressOverlay') {
+        const isAvia = type === 'avia';
+        document.getElementById('addressTitle').textContent = isAvia ? 'Xitoy manzili (AVIA)' : 'Xitoy manzili (AVTO)';
+        const phone = isAvia ? '18699944426' : '13819957009';
+        const address = `收货人: JEK${currentUser.id} ${isAvia ? 'AVIA' : ''}\n手机号码: ${phone}\n浙江省金华市义乌市荷叶塘东青路89号618仓库(JEK${currentUser.id})`;
+        document.getElementById('addressContent').textContent = address;
+        window.currentAddressText = address;
+    }
+    document.getElementById(id).classList.add('active');
 }
 
-function showTopshirish() {
-    alert('Topshirish punktlari:\n• Toshkent asosiy\n• Namangan Sardoba');
+function closeOverlay() {
+    document.querySelectorAll('.overlay').forEach(o => o.classList.remove('active'));
 }
 
-function showPochtaBepul() {
-    alert('🎁 1 kg dan ko\'p yuklarda EMU EXPRESS bepul yuboramiz!');
+function copyAddress() {
+    navigator.clipboard.writeText(window.currentAddressText || '').then(() => {
+        alert('Manzil nusxalandi! ✅');
+    });
 }
 
-function showCalculator() {
-    alert('Kalkulyator yaqin orada qo\'shiladi!');
+// Calculator
+function calculatePrice() {
+    const service = document.getElementById('calcService').value;
+    const items = parseInt(document.getElementById('calcItems').value) || 1;
+    const weight = parseFloat(document.getElementById('calcWeight').value);
+    const dims = document.getElementById('calcDimensions').value.trim();
+
+    if (!weight || weight <= 0) return alert('Og\'irlikni kiriting!');
+
+    let maxDim = 0;
+    if (dims) {
+        const parts = dims.split(/[xX×*]/).map(p => parseFloat(p.trim())).filter(n => !isNaN(n));
+        if (parts.length === 3) maxDim = Math.max(...parts);
+    }
+
+    const isHigh = (items >= 5) || (maxDim > 50);
+    const rate = isHigh ? (service === 'avia' ? 11 : 7.5) : (service === 'avia' ? settings.aviaPrice : settings.avtoPrice);
+    const totalUSD = (rate * weight).toFixed(2);
+    const totalUZS = Math.round(rate * weight * settings.dollarRate).toLocaleString('uz-UZ');
+
+    document.getElementById('calcResult').innerHTML = `
+        <div class="alert alert-success text-center p-4">
+            <h4>$${totalUSD} (${rate}$/kg)${isHigh ? ' <small>(yuqori narx)</small>' : ''}</h4>
+            <h5>${totalUZS} so'm</h5>
+            ${weight > 1 ? '<p><strong>Bonus: Pochta bepul!</strong></p>' : ''}
+        </div>
+    `;
 }
 
-// Track numbers - now permanently saved
+// Track numbers
 function addTrackNumbers() {
     const input = document.getElementById('trackInput').value.trim();
     if (!input) return alert('Trek raqam kiriting!');
@@ -211,13 +232,16 @@ function deleteTrack(i) {
 function findTrackInAllFiles(code) {
     code = code.toUpperCase();
     for (const file of allExcelData) {
-        const row = file.data.find(r => (r['追踪代码'] || '').toString().toUpperCase() === code);
+        const row = file.data.find(r => {
+            const track = (r['追踪代码'] || r['追踪代码 '] || '').toString().trim();
+            return track.toUpperCase() === code;
+        });
         if (row) {
             return {
                 fileName: file.name,
-                weight: parseFloat(r['重量/KG'] || r['重量'] || 0),
-                receiptDate: r['收货日期'] || 'Noma\'lum',
-                product: r['货物名称'] || r['Название товара'] || 'Noma\'lum'
+                weight: parseFloat(row['重量/KG'] || row['重量'] || 0),
+                receiptDate: row['收货日期'] || 'Noma\'lum',
+                product: row['货物名称'] || row['Название товара'] || 'Noma\'lum'
             };
         }
     }
@@ -260,7 +284,7 @@ function uploadExcel() {
             const fileInfo = { name: input.files[0].name, date: new Date().toLocaleString('uz-UZ'), data: json };
             allExcelData.push(fileInfo);
             saveAllExcelData();
-            alert(`"${fileInfo.name}" yuklandi! Endi barcha fayllardan qidiriladi.`);
+            alert(`"${fileInfo.name}" yuklandi!`);
             renderAdminPanel();
         } catch (err) {
             alert('Xato: ' + err.message);
@@ -278,7 +302,7 @@ function renderAdminPanel() {
         ? '<p class="text-muted">Xabar yo\'q</p>'
         : clientMessages.map(m => `<div class="border-bottom py-2"><strong>ID ${m.id}</strong><br>${m.message}<br><small>${m.time}</small></div>`).join('');
 
-    // List all clients
+    // Client list
     const clients = [];
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -296,10 +320,6 @@ function renderAdminPanel() {
                 <button class="btn btn-sm btn-danger mt-2" onclick="deleteUserTracks('${u.id}')">Treklarini o'chirish</button>
             </div>
         `).join('');
-
-    document.getElementById('adminLogs').innerHTML = adminLogs.length === 0 
-        ? '<p class="text-muted">Log yo\'q</p>'
-        : adminLogs.map(l => `<div><small>${l.time}</small> ${l.msg}</div>`).join('');
 }
 
 function deleteUserTracks(id) {
