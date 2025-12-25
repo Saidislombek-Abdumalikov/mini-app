@@ -13,27 +13,32 @@
             --dark: #1B1B19;
             --blue: #0071C0;
         }
-        body { background: var(--secondary); color: var(--dark); font-family: 'Segoe UI', sans-serif; padding-bottom: 80px; margin: 0; }
+        body { background: var(--secondary); color: var(--dark); font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 80px; }
         .header { background: var(--primary); color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 20px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .page { display: none; padding: 20px; min-height: calc(100vh - 140px); }
-        .page.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .big-button { background: white; border: 2px solid var(--primary); border-radius: 16px; padding: 25px; margin-bottom: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: 0.3s; cursor: pointer; user-select: none; }
-        .big-button:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
-        .big-button:active { transform: scale(0.98); }
+        .page { display: none; padding: 20px; }
+        .page.active { display: block; }
+        .big-button { background: white; border: 2px solid var(--primary); border-radius: 16px; padding: 25px; margin-bottom: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: 0.3s; cursor: pointer; }
+        .big-button:hover { transform: translateY(-5px); }
         .big-button i { font-size: 40px; color: var(--blue); margin-bottom: 15px; display: block; }
         .big-button .title { font-size: 18px; font-weight: bold; color: var(--primary); }
         .big-button .subtitle { font-size: 14px; color: #666; }
         .card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .input-group input, .input-group textarea { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 12px; font-size: 16px; }
         .btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        .btn:active { transform: scale(0.98); }
+        .btn-blue { background: var(--blue); }
         .track-item { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--blue); }
         .delete-btn { background: #dc3545; color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 16px; cursor: pointer; }
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); z-index: 1000; }
         .nav-item { flex: 1; text-align: center; padding: 12px; color: #888; cursor: pointer; }
         .nav-item.active { color: var(--primary); }
         .nav-item i { font-size: 24px; display: block; margin-bottom: 4px; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
+        .overlay.active { display: flex; }
+        .overlay-content { background: white; border-radius: 16px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .overlay-header { background: var(--primary); color: white; padding: 15px; border-radius: 16px 16px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .close-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+        .overlay-body { padding: 20px; }
+        .address-box { background: #f0f0f0; padding: 15px; border-radius: 12px; font-family: monospace; white-space: pre-wrap; }
         #adminPanel { display: none; background: var(--secondary); min-height: 100vh; padding-top: 70px; }
         .admin-card { background: white; border-radius: 16px; padding: 20px; margin: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     </style>
@@ -44,27 +49,27 @@
 
 <!-- Asosiy -->
 <div class="page active" id="asosiyPage">
-    <div class="big-button" onclick="showAddress('avia')">
+    <div class="big-button" onclick="openOverlay('addressOverlay', 'avia')">
         <i class="fas fa-plane"></i>
         <div class="title">Xitoy manzili (AVIA)</div>
         <div class="subtitle">Avia yuklar uchun</div>
     </div>
-    <div class="big-button" onclick="showAddress('avto')">
+    <div class="big-button" onclick="openOverlay('addressOverlay', 'avto')">
         <i class="fas fa-truck"></i>
         <div class="title">Xitoy manzili (AVTO)</div>
         <div class="subtitle">Avto yuklar uchun</div>
     </div>
-    <div class="big-button" onclick="showTopshirish()">
+    <div class="big-button" onclick="openOverlay('topshirishOverlay')">
         <i class="fas fa-map-marker-alt"></i>
         <div class="title">Topshirish punktlari</div>
         <div class="subtitle">O'zbekistondagi manzillar</div>
     </div>
-    <div class="big-button" onclick="showPochtaBepul()">
+    <div class="big-button" onclick="openOverlay('pochtaOverlay')">
         <i class="fas fa-gift"></i>
         <div class="title">Pochta bepul</div>
         <div class="subtitle">1 kg+ yuklarga</div>
     </div>
-    <div class="big-button" onclick="showCalculator()">
+    <div class="big-button" onclick="openOverlay('calculatorOverlay')">
         <i class="fas fa-calculator"></i>
         <div class="title">Kalkulyator</div>
         <div class="subtitle">Narxni hisoblash</div>
@@ -76,7 +81,7 @@
     <div class="card">
         <h3>Trek raqam qo'shish</h3>
         <div class="input-group">
-            <input type="text" id="trackInput" placeholder="Vergul bilan: ABC123, DEF456">
+            <input type="text" id="trackInput" placeholder="Vergul bilan ajrating: 777363587412565, 78964192795068">
         </div>
         <button class="btn" onclick="addTrackNumbers()">Qo'shish</button>
     </div>
@@ -98,7 +103,7 @@
     <div class="card text-center p-5">
         <i class="fas fa-telegram fa-4x" style="color: var(--blue);"></i>
         <h3>Admin bilan chat</h3>
-        <button class="btn" style="background: var(--blue);" onclick="openAdminChat()">Telegramda yozish</button>
+        <button class="btn btn-blue" onclick="openAdminChat()">Telegramda yozish</button>
     </div>
 </div>
 
@@ -115,10 +120,89 @@
     </div>
 </div>
 
+<!-- Overlays -->
+<div class="overlay" id="addressOverlay">
+    <div class="overlay-content">
+        <div class="overlay-header">
+            <h3 id="addressTitle">Xitoy manzili</h3>
+            <button class="close-btn" onclick="closeOverlay()">×</button>
+        </div>
+        <div class="overlay-body">
+            <div class="address-box" id="addressContent"></div>
+            <button class="btn btn-blue" onclick="copyAddress()">Nusxalash</button>
+        </div>
+    </div>
+</div>
+
+<div class="overlay" id="topshirishOverlay">
+    <div class="overlay-content">
+        <div class="overlay-header">
+            <h3>Topshirish punktlari</h3>
+            <button class="close-btn" onclick="closeOverlay()">×</button>
+        </div>
+        <div class="overlay-body">
+            <div class="location-item p-3">
+                <strong>Toshkent asosiy</strong><br>
+                Toshkent shahar
+            </div>
+            <div class="location-item p-3">
+                <strong>Namangan Sardoba</strong><br>
+                Namangan viloyati
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="overlay" id="pochtaOverlay">
+    <div class="overlay-content">
+        <div class="overlay-header">
+            <h3>Pochta bepul</h3>
+            <button class="close-btn" onclick="closeOverlay()">×</button>
+        </div>
+        <div class="overlay-body text-center">
+            <i class="fas fa-gift fa-4x" style="color: var(--blue); margin-bottom: 20px;"></i>
+            <h2 style="color: var(--primary);">🎁 Bonus xizmat!</h2>
+            <p class="lead">Agar yukingiz <strong>1 kg dan ko'p</strong> bo'lsa, EMU EXPRESS ning barcha filiallari ga <strong>bepul</strong> yuboramiz!</p>
+        </div>
+    </div>
+</div>
+
+<div class="overlay" id="calculatorOverlay">
+    <div class="overlay-content">
+        <div class="overlay-header">
+            <h3>Narx kalkulyatori</h3>
+            <button class="close-btn" onclick="closeOverlay()">×</button>
+        </div>
+        <div class="overlay-body">
+            <div class="input-group mb-3">
+                <label>Xizmat turi</label>
+                <select id="calcService" class="form-control">
+                    <option value="avia">Avia (3-5 kun)</option>
+                    <option value="avto">Avto (14-18 kun)</option>
+                </select>
+            </div>
+            <div class="input-group mb-3">
+                <label>Donalar soni</label>
+                <input type="number" id="calcItems" value="1" min="1" class="form-control">
+            </div>
+            <div class="input-group mb-3">
+                <label>Og'irlik (kg)</label>
+                <input type="number" id="calcWeight" step="0.1" min="0.1" class="form-control">
+            </div>
+            <div class="input-group mb-3">
+                <label>O'lchamlar (sm)</label>
+                <input type="text" id="calcDimensions" placeholder="50x30x20" class="form-control">
+            </div>
+            <button class="btn" onclick="calculatePrice()">Hisoblash</button>
+            <div id="calcResult" class="mt-4"></div>
+        </div>
+    </div>
+</div>
+
 <!-- Admin Panel (hidden) -->
 <div id="adminPanel">
     <div class="header">ADMIN PANEL</div>
-    <div class="container">
+    <div class="container mt-4">
         <div class="admin-card">
             <h3>Yangi Excel yuklash</h3>
             <input type="file" id="excelUpload" accept=".xlsx" class="form-control mb-3">
@@ -142,15 +226,10 @@
 
         <div class="admin-card">
             <h3>Narx sozlamalari</h3>
-            <div class="input-group"><label>Dollar kursi</label><input type="number" id="dollarRate" class="form-control"></div>
-            <div class="input-group"><label>Avia narxi ($/kg)</label><input type="number" step="0.1" id="aviaPrice" class="form-control"></div>
-            <div class="input-group"><label>Avto narxi ($/kg)</label><input type="number" step="0.1" id="avtoPrice" class="form-control"></div>
-            <button class="btn mt-3" onclick="savePrices()">Saqlash</button>
-        </div>
-
-        <div class="admin-card">
-            <h3>Log</h3>
-            <div id="adminLogs" style="max-height:300px; overflow-y:auto;"></div>
+            <div class="input-group mb-3"><label>Dollar kursi</label><input type="number" id="dollarRate" class="form-control"></div>
+            <div class="input-group mb-3"><label>Avia narxi ($/kg)</label><input type="number" step="0.1" id="aviaPrice" class="form-control"></div>
+            <div class="input-group mb-3"><label>Avto narxi ($/kg)</label><input type="number" step="0.1" id="avtoPrice" class="form-control"></div>
+            <button class="btn" onclick="savePrices()">Saqlash</button>
         </div>
 
         <div class="text-center">
