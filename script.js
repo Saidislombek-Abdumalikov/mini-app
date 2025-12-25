@@ -97,27 +97,29 @@ function checkLogin() {
 }
 
 // Login prompt with validation
+// Login prompt - completely hidden admin access
 function promptLogin() {
     let input;
     do {
         input = prompt('ID kodingizni kiriting (3 yoki 4 raqamli son):').trim();
-        
+
         if (!input) {
             alert('ID kiritish majburiy!');
             continue;
         }
 
-        if (input === 's08121719') {  // ← New admin code
+        // Secret admin access - NO HINT AT ALL
+        if (input === 's08121719') {
             currentUser.id = 'ADMIN';
             currentUser.isAdmin = true;
             currentUser.registrationDate = new Date().toLocaleDateString('uz-UZ');
             saveUserData();
             showAdminPanel();
-            addAdminLog('Admin tizimga kirdi (s08121719)');
+            addAdminLog('Admin tizimga kirdi');
             return;
         }
 
-        // Only 3 or 4 digits allowed for normal users
+        // Normal user: only 3 or 4 digits
         if (/^\d{3,4}$/.test(input)) {
             currentUser.id = input;
             currentUser.registrationDate = new Date().toLocaleDateString('uz-UZ');
@@ -450,4 +452,5 @@ function loadAdminLogsDisplay() {
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('overlay')) closeOverlay();
 });
+
 
