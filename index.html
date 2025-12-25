@@ -6,42 +6,112 @@
     <title>JEK KARGO</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
         :root {
             --primary: #61210F;
             --secondary: #FDF0D5;
             --dark: #1B1B19;
             --blue: #0071C0;
+            --green: #28a745;
+            --glass: rgba(255, 255, 255, 0.85);
+            --shadow: 0 8px 32px rgba(0,0,0,0.1);
         }
-        body { background: var(--secondary); color: var(--dark); font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 80px; }
-        .header { background: var(--primary); color: white; padding: 15px; text-align: center; font-weight: bold; font-size: 20px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .page { display: none; padding: 20px; }
+        body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var(--dark); font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 80px; min-height: 100vh; }
+        .header { background: linear-gradient(45deg, var(--primary), #8b4513); color: white; padding: 18px; text-align: center; font-weight: bold; font-size: 22px; position: sticky; top: 0; z-index: 1000; box-shadow: var(--shadow); }
+        .page { display: none; padding: 20px; animation: fadeIn 0.5s; }
         .page.active { display: block; }
-        .big-button { background: white; border: 2px solid var(--primary); border-radius: 16px; padding: 25px; margin-bottom: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: 0.3s; cursor: pointer; }
-        .big-button:hover { transform: translateY(-5px); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .big-button { 
+            background: var(--glass); 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(255,255,255,0.3); 
+            border-radius: 20px; 
+            padding: 30px; 
+            margin-bottom: 20px; 
+            text-align: center; 
+            box-shadow: var(--shadow); 
+            transition: all 0.3s ease; 
+            cursor: pointer; 
+        }
+        .big-button:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(0,0,0,0.2); }
         .big-button:active { transform: scale(0.98); }
-        .big-button i { font-size: 40px; color: var(--blue); margin-bottom: 15px; display: block; }
-        .big-button .title { font-size: 18px; font-weight: bold; color: var(--primary); }
-        .big-button .subtitle { font-size: 14px; color: #666; }
-        .card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .input-group input, .input-group textarea { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 12px; font-size: 16px; }
-        .btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 16px; cursor: pointer; }
-        .btn-blue { background: var(--blue); }
-        .track-item { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--blue); }
-        .delete-btn { background: #dc3545; color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 16px; cursor: pointer; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); z-index: 1000; }
-        .nav-item { flex: 1; text-align: center; padding: 12px; color: #888; cursor: pointer; }
-        .nav-item.active { color: var(--primary); }
-        .nav-item i { font-size: 24px; display: block; margin-bottom: 4px; }
-        .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center; }
-        .overlay.active { display: flex; }
-        .overlay-content { background: white; border-radius: 16px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
-        .overlay-header { background: var(--primary); color: white; padding: 15px; border-radius: 16px 16px 0 0; display: flex; justify-content: space-between; align-items: center; }
-        .close-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
-        .overlay-body { padding: 20px; }
-        .address-box { background: #f0f0f0; padding: 15px; border-radius: 12px; font-family: monospace; white-space: pre-wrap; word-break: break-all; }
-        #adminPanel { display: none; background: var(--secondary); min-height: 100vh; padding-top: 70px; }
-        .admin-card { background: white; border-radius: 16px; padding: 20px; margin: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .big-button i { font-size: 48px; margin-bottom: 15px; display: block; }
+        .big-button i.fas.fa-plane { color: var(--blue); }
+        .big-button i.fas.fa-truck { color: var(--green); }
+        .big-button .title { font-size: 20px; font-weight: bold; color: var(--primary); }
+        .big-button .subtitle { font-size: 15px; color: #666; margin-top: 8px; }
+        .card { 
+            background: var(--glass); 
+            backdrop-filter: blur(10px); 
+            border-radius: 20px; 
+            padding: 25px; 
+            margin-bottom: 20px; 
+            box-shadow: var(--shadow); 
+        }
+        .input-group input, .input-group textarea { 
+            width: 100%; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 15px; 
+            font-size: 16px; 
+            background: rgba(255,255,255,0.7); 
+        }
+        .btn { 
+            width: 100%; 
+            padding: 16px; 
+            background: linear-gradient(45deg, var(--primary), #8b4513); 
+            color: white; 
+            border: none; 
+            border-radius: 15px; 
+            font-weight: bold; 
+            font-size: 18px; 
+            cursor: pointer; 
+            box-shadow: 0 4px 15px rgba(97,33,15,0.3); 
+            transition: 0.3s; 
+        }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(97,33,15,0.4); }
+        .btn:active { transform: scale(0.98); }
+        .track-item { 
+            background: var(--glass); 
+            backdrop-filter: blur(10px); 
+            border-radius: 18px; 
+            padding: 20px; 
+            margin-bottom: 15px; 
+            box-shadow: var(--shadow); 
+            border-left: 6px solid var(--blue); 
+            transition: 0.3s; 
+        }
+        .track-item.avia { border-left-color: var(--blue); }
+        .track-item.avto { border-left-color: var(--green); }
+        .track-item:hover { transform: translateX(5px); }
+        .track-code { font-size: 20px; font-weight: bold; color: var(--primary); margin-bottom: 10px; }
+        .track-info { font-size: 15px; line-height: 1.6; }
+        .delete-btn { 
+            background: #dc3545; 
+            color: white; 
+            border: none; 
+            border-radius: 50%; 
+            width: 40px; 
+            height: 40px; 
+            font-size: 18px; 
+            cursor: pointer; 
+            box-shadow: 0 4px 10px rgba(220,53,69,0.3); 
+        }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--glass); backdrop-filter: blur(10px); display: flex; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); z-index: 1000; }
+        .nav-item { flex: 1; text-align: center; padding: 15px; color: #888; cursor: pointer; transition: 0.3s; }
+        .nav-item.active { color: var(--primary); transform: scale(1.1); }
+        .nav-item i { font-size: 26px; display: block; margin-bottom: 5px; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; }
+        .overlay.active { display: flex; animation: fadeIn 0.4s; }
+        .overlay-content { background: var(--glass); backdrop-filter: blur(15px); border-radius: 20px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        .overlay-header { background: linear-gradient(45deg, var(--primary), #8b4513); color: white; padding: 20px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .close-btn { background: none; border: none; color: white; font-size: 28px; cursor: pointer; }
+        .overlay-body { padding: 25px; }
+        .address-box { background: rgba(0,0,0,0.05); padding: 20px; border-radius: 15px; font-family: monospace; white-space: pre-wrap; word-break: break-all; font-size: 15px; }
+        #adminPanel { display: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding-top: 80px; color: white; }
+        .admin-card { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 20px; padding: 25px; margin: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.2); }
+        .admin-card h3 { color: #00ffea; text-shadow: 0 0 10px rgba(0,255,234,0.5); }
     </style>
 </head>
 <body>
@@ -49,45 +119,45 @@
 <div class="header" id="pageTitle">JEK KARGO</div>
 
 <!-- Asosiy -->
-<div class="page active" id="asosiyPage">
+<div class="page active animate__animated animate__fadeIn" id="asosiyPage">
     <div class="big-button" onclick="openOverlay('addressOverlay', 'avia')">
         <i class="fas fa-plane"></i>
         <div class="title">Xitoy manzili (AVIA)</div>
-        <div class="subtitle">Avia yuklar uchun</div>
+        <div class="subtitle">Tez yetkazib berish ✈️</div>
     </div>
     <div class="big-button" onclick="openOverlay('addressOverlay', 'avto')">
         <i class="fas fa-truck"></i>
         <div class="title">Xitoy manzili (AVTO)</div>
-        <div class="subtitle">Avto yuklar uchun</div>
+        <div class="subtitle">Arzon narx 🚚</div>
     </div>
     <div class="big-button" onclick="openOverlay('topshirishOverlay')">
         <i class="fas fa-map-marker-alt"></i>
         <div class="title">Topshirish punktlari</div>
-        <div class="subtitle">O'zbekistondagi manzillar</div>
+        <div class="subtitle">O'zbekistonda</div>
     </div>
     <div class="big-button" onclick="openOverlay('pochtaOverlay')">
         <i class="fas fa-gift"></i>
         <div class="title">Pochta bepul</div>
-        <div class="subtitle">1 kg+ yuklarga</div>
+        <div class="subtitle">1 kg+ yuklarda</div>
     </div>
     <div class="big-button" onclick="openOverlay('calculatorOverlay')">
         <i class="fas fa-calculator"></i>
-        <div class="title">Kalkulyator</div>
-        <div class="subtitle">Narxni hisoblash</div>
+        <div class="title">Narx kalkulyatori</div>
+        <div class="subtitle">Tez hisoblash</div>
     </div>
 </div>
 
 <!-- Buyurtmalar -->
 <div class="page" id="buyurtmalarPage">
     <div class="card">
-        <h3>Trek raqam qo'shish</h3>
+        <h3 class="text-center mb-4">Trek raqam qo'shish</h3>
         <div class="input-group">
-            <input type="text" id="trackInput" placeholder="Vergul bilan ajrating: 777363587412565, 78964192795068">
+            <input type="text" id="trackInput" placeholder="Masalan: 777363587412565">
         </div>
-        <button class="btn" onclick="addTrackNumbers()">Qo'shish</button>
+        <button class="btn mt-3" onclick="addTrackNumbers()">Qo'shish</button>
     </div>
     <div class="card">
-        <h3>Mening buyurtmalarim</h3>
+        <h3 class="text-center mb-4">Mening buyurtmalarim</h3>
         <div id="trackList"></div>
     </div>
 </div>
@@ -95,77 +165,79 @@
 <!-- Chatlar -->
 <div class="page" id="chatlarPage">
     <div class="card">
-        <h3>Taklif yoki etiroz</h3>
+        <h3 class="text-center mb-4">Taklif yoki savol</h3>
         <div class="input-group">
-            <textarea id="messageText" rows="5" placeholder="Xabaringizni yozing..."></textarea>
+            <textarea id="messageText" rows="6" placeholder="Xabaringizni yozing..."></textarea>
         </div>
-        <button class="btn" onclick="sendMessage()">Yuborish</button>
+        <button class="btn mt-3" onclick="sendMessage()">Yuborish</button>
     </div>
     <div class="card text-center p-5">
-        <i class="fas fa-telegram fa-4x" style="color: var(--blue);"></i>
-        <h3>Admin bilan chat</h3>
-        <button class="btn btn-blue" onclick="openAdminChat()">Telegramda yozish</button>
+        <i class="fas fa-telegram fa-5x" style="color: var(--blue); margin-bottom: 20px;"></i>
+        <h3>Admin bilan tez aloqa</h3>
+        <button class="btn" style="background: var(--blue);" onclick="openAdminChat()">Telegramda yozish</button>
     </div>
 </div>
 
 <!-- Profil -->
 <div class="page" id="profilPage">
-    <div class="card text-center">
-        <i class="fas fa-user-circle fa-5x" style="color: var(--blue); margin-bottom: 20px;"></i>
-        <div class="p-4">
-            <div class="text-start border-bottom py-2"><strong>ID Kod:</strong> <span id="profileId" class="float-end">-</span></div>
-            <div class="text-start border-bottom py-2"><strong>Ro'yxatdan o'tgan:</strong> <span id="profileDate" class="float-end">-</span></div>
-            <div class="text-start py-2"><strong>Jami treklar:</strong> <span id="profileOrders" class="float-end">0</span></div>
-        </div>
-        <button class="btn" style="background:#dc3545; margin-top: 20px;" onclick="logout()">Chiqish</button>
+    <div class="card text-center animate__animated animate__fadeIn">
+        <i class="fas fa-user-circle fa-5x" style="color: var(--blue); margin-bottom: 25px;"></i>
+        <h2>ID: <span id="profileId">-</span></h2>
+        <p>Ro'yxatdan o'tgan: <strong id="profileDate">-</strong></p>
+        <p>Jami treklar: <strong id="profileOrders">0</strong></p>
+        <button class="btn" style="background:#dc3545; margin-top: 30px;" onclick="logout()">Chiqish</button>
     </div>
 </div>
 
 <!-- Overlays -->
 <div class="overlay" id="addressOverlay">
-    <div class="overlay-content">
+    <div class="overlay-content animate__animated animate__zoomIn">
         <div class="overlay-header">
             <h3 id="addressTitle">Xitoy manzili</h3>
             <button class="close-btn" onclick="closeOverlay()">×</button>
         </div>
         <div class="overlay-body">
             <div class="address-box" id="addressContent"></div>
-            <button class="btn btn-blue" onclick="copyAddress()">Nusxalash</button>
+            <button class="btn" style="background: var(--blue); margin-top: 20px;" onclick="copyAddress()">Nusxalash</button>
         </div>
     </div>
 </div>
 
 <div class="overlay" id="topshirishOverlay">
-    <div class="overlay-content">
+    <div class="overlay-content animate__animated animate__zoomIn">
         <div class="overlay-header">
             <h3>Topshirish punktlari</h3>
             <button class="close-btn" onclick="closeOverlay()">×</button>
         </div>
         <div class="overlay-body">
-            <ul>
-                <li><strong>Toshkent asosiy</strong> - Toshkent shahar</li>
-                <li><strong>Namangan Sardoba</strong> - Namangan viloyati</li>
-            </ul>
+            <div class="card mb-3">
+                <h4>Toshkent asosiy ofis</h4>
+                <p>Toshkent shahri, Chilanzar tumani</p>
+            </div>
+            <div class="card">
+                <h4>Namangan filiali</h4>
+                <p>Namangan viloyati, Sardoba</p>
+            </div>
         </div>
     </div>
 </div>
 
 <div class="overlay" id="pochtaOverlay">
-    <div class="overlay-content">
+    <div class="overlay-content animate__animated animate__zoomIn">
         <div class="overlay-header">
             <h3>Pochta bepul</h3>
             <button class="close-btn" onclick="closeOverlay()">×</button>
         </div>
         <div class="overlay-body text-center">
-            <i class="fas fa-gift fa-4x" style="color: var(--blue); margin-bottom: 20px;"></i>
-            <h2 style="color: var(--primary);">🎁 Bonus xizmat!</h2>
-            <p class="lead">Agar yukingiz <strong>1 kg dan ko'p</strong> bo'lsa, EMU EXPRESS ning barcha filiallari ga <strong>bepul</strong> yuboramiz!</p>
+            <i class="fas fa-gift fa-5x" style="color: var(--green); margin-bottom: 20px;"></i>
+            <h2>Bonus xizmat!</h2>
+            <p class="lead">Yuk og'irligi <strong>1 kg dan ortiq</strong> bo'lsa — barcha EMU EXPRESS filiallari ga <strong>bepul</strong> yetkazamiz!</p>
         </div>
     </div>
 </div>
 
 <div class="overlay" id="calculatorOverlay">
-    <div class="overlay-content">
+    <div class="overlay-content animate__animated animate__zoomIn">
         <div class="overlay-header">
             <h3>Narx kalkulyatori</h3>
             <button class="close-btn" onclick="closeOverlay()">×</button>
@@ -174,21 +246,13 @@
             <div class="input-group mb-3">
                 <label>Xizmat turi</label>
                 <select id="calcService" class="form-control">
-                    <option value="avia">Avia kargo (3-5 kun) ✈️</option>
-                    <option value="avto">Avto kargo (14-18 kun) 🚚</option>
+                    <option value="avia">Avia (3-5 kun)</option>
+                    <option value="avto">Avto (14-18 kun)</option>
                 </select>
-            </div>
-            <div class="input-group mb-3">
-                <label>Donalar soni</label>
-                <input type="number" id="calcItems" value="1" min="1" class="form-control">
             </div>
             <div class="input-group mb-3">
                 <label>Og'irlik (kg)</label>
                 <input type="number" id="calcWeight" step="0.1" min="0.1" class="form-control">
-            </div>
-            <div class="input-group mb-3">
-                <label>O'lchamlar (sm: UxExB)</label>
-                <input type="text" id="calcDimensions" placeholder="50x30x20" class="form-control">
             </div>
             <button class="btn" onclick="calculatePrice()">Hisoblash</button>
             <div id="calcResult" class="mt-4"></div>
@@ -221,15 +285,7 @@
             <div id="clientList"></div>
         </div>
 
-        <div class="admin-card">
-            <h3>Narx sozlamalari</h3>
-            <div class="input-group mb-3"><label>Dollar kursi</label><input type="number" id="dollarRate" class="form-control"></div>
-            <div class="input-group mb-3"><label>Avia narxi ($/kg)</label><input type="number" step="0.1" id="aviaPrice" class="form-control"></div>
-            <div class="input-group mb-3"><label>Avto narxi ($/kg)</label><input type="number" step="0.1" id="avtoPrice" class="form-control"></div>
-            <button class="btn mt-3" onclick="savePrices()">Saqlash</button>
-        </div>
-
-        <div class="text-center">
+        <div class="text-center mt-5">
             <button class="btn" style="background:#dc3545;" onclick="logout()">Chiqish</button>
         </div>
     </div>
